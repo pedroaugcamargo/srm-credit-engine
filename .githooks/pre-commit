@@ -1,0 +1,11 @@
+#!/bin/sh
+# Bloqueia commit direto na main.
+branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+if [ "$branch" = "main" ]; then
+  echo ""
+  echo "ERRO: commit direto na main bloqueado."
+  echo "Crie uma branch antes: git switch -c feat/nome-da-entrega"
+  echo ""
+  exit 1
+fi
+exit 0
