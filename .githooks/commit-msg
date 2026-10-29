@@ -1,0 +1,15 @@
+#!/bin/sh
+# Valida Conventional Commits: tipo(escopo opcional): descricao
+msg=$(head -n 1 "$1")
+case "$msg" in
+  Merge*|Revert*) exit 0 ;;
+esac
+if ! echo "$msg" | grep -Eq '^(feat|fix|docs|chore|refactor|test|ci|build|perf|style|revert)(\([a-z0-9-]+\))?!?: .+'; then
+  echo ""
+  echo "ERRO: mensagem fora do padrao Conventional Commits."
+  echo "Exemplo: feat(pricing): add duplicata strategy"
+  echo "Recebido: $msg"
+  echo ""
+  exit 1
+fi
+exit 0
