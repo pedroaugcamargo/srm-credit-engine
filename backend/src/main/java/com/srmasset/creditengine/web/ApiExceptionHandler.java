@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.srmasset.creditengine.application.CedenteNotFoundException;
 import com.srmasset.creditengine.application.IdempotencyKeyRequiredException;
+import com.srmasset.creditengine.application.IdempotencyKeyReusedException;
 import com.srmasset.creditengine.application.ReceivableAlreadySettledException;
 import com.srmasset.creditengine.application.ReceivableNotFoundException;
 import com.srmasset.creditengine.domain.fx.FxRateStaleException;
@@ -45,6 +46,15 @@ public class ApiExceptionHandler {
 	ProblemDetail receivableAlreadySettled(ReceivableAlreadySettledException exception) {
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
 		problem.setProperty("code", "RECEIVABLE_ALREADY_SETTLED");
+		return problem;
+	}
+
+	@ExceptionHandler(IdempotencyKeyReusedException.class)
+	ProblemDetail idempotencyKeyReused(IdempotencyKeyReusedException exception) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+				HttpStatus.UNPROCESSABLE_CONTENT,
+				exception.getMessage());
+		problem.setProperty("code", "IDEMPOTENCY_KEY_REUSED");
 		return problem;
 	}
 

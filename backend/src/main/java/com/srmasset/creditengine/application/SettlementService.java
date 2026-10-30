@@ -9,10 +9,15 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.HexFormat;
+import java.util.Optional;
 import java.util.UUID;
 
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import com.srmasset.creditengine.domain.fx.FxRateStaleException;
 import com.srmasset.creditengine.domain.fx.FxSelection;
@@ -40,6 +45,8 @@ public class SettlementService {
 	private final PricingEngine engine;
 	private final TermCalculator termCalculator;
 	private final Clock clock;
+	private final TransactionTemplate transaction;
+	private final TransactionTemplate requiresNew;
 
 	public SettlementService(
 			ReceivableRepository receivables,
@@ -48,7 +55,8 @@ public class SettlementService {
 			DbFxRateProvider fxRates,
 			PricingEngine engine,
 			TermCalculator termCalculator,
-			Clock clock) {
+			Clock clock,
+			PlatformTransactionManager transactions) {
 		this.receivables = receivables;
 		this.settlements = settlements;
 		this.baseRates = baseRates;
@@ -56,10 +64,39 @@ public class SettlementService {
 		this.engine = engine;
 		this.termCalculator = termCalculator;
 		this.clock = clock;
+		this.transaction = new TransactionTemplate(transactions);
+		this.requiresNew = new TransactionTemplate(transactions);
+		this.requiresNew.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 	}
 
-	@Transactional
-	public SettlementSnapshot settle(UUID idempotencyKey, UUID receivableId, PaymentCurrency paymentCurrency) {
+	public SettlementResult settle(UUID idempotencyKey, UUID receivableId, PaymentCurrency paymentCurrency) {
+		String hash = requestHash(receivableId, paymentCurrency);
+		Optional<SettlementEntity> existing = settlements.findByIdempotencyKey(idempotencyKey);
+		if (existing.isPresent()) {
+			if (!sameHash(existing.get(), hash)) {
+				throw new IdempotencyKeyReusedException();
+			}
+			return new SettlementResult(toSnapshot(existing.get()), true);
+		}
+		try {
+			SettlementSnapshot created = transaction.execute(status -> create(idempotencyKey, receivableId, paymentCurrency, hash));
+			return new SettlementResult(created, false);
+		} catch (DataIntegrityViolationException exception) {
+			if (causedBy(exception, "settlements_idempotency_key_unique")) {
+				SettlementEntity original = requiresNew.execute(status -> settlements.findByIdempotencyKey(idempotencyKey)
+						.orElseThrow(() -> exception));
+				return new SettlementResult(toSnapshot(original), true);
+			}
+			if (causedBy(exception, "settlements_receivable_unique")) {
+				throw new ReceivableAlreadySettledException();
+			}
+			throw exception;
+		} catch (ObjectOptimisticLockingFailureException exception) {
+			throw new ReceivableAlreadySettledException();
+		}
+	}
+
+	private SettlementSnapshot create(UUID idempotencyKey, UUID receivableId, PaymentCurrency paymentCurrency, String hash) {
 		ReceivableEntity receivable = receivables.findById(receivableId).orElseThrow(ReceivableNotFoundException::new);
 		if (receivable.getStatus() == ReceivableStatus.SETTLED) {
 			throw new ReceivableAlreadySettledException();
@@ -93,7 +130,7 @@ public class SettlementService {
 		settlement.setReceivableId(receivable.getId());
 		settlement.setCedenteId(receivable.getCedenteId());
 		settlement.setIdempotencyKey(idempotencyKey);
-		settlement.setRequestHash(requestHash(receivableId, paymentCurrency));
+		settlement.setRequestHash(hash);
 		settlement.setPaymentCurrency(paymentCurrency);
 		settlement.setFaceValue(priced.faceValue());
 		settlement.setTermMonths(priced.termMonths());
@@ -106,6 +143,22 @@ public class SettlementService {
 		settlement.setNetAmount(priced.netAmount());
 		settlement.setSettledAt(OffsetDateTime.now(clock));
 		return toSnapshot(settlements.saveAndFlush(settlement));
+	}
+
+	private static boolean sameHash(SettlementEntity settlement, String hash) {
+		return settlement.getRequestHash().trim().equals(hash);
+	}
+
+	private static boolean causedBy(Throwable exception, String constraint) {
+		Throwable current = exception;
+		while (current != null) {
+			String message = current.getMessage();
+			if (message != null && message.contains(constraint)) {
+				return true;
+			}
+			current = current.getCause();
+		}
+		return false;
 	}
 
 	static String requestHash(UUID receivableId, PaymentCurrency paymentCurrency) {

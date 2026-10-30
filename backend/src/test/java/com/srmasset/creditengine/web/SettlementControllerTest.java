@@ -1,7 +1,5 @@
 package com.srmasset.creditengine.web;
 
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
@@ -23,11 +21,8 @@ import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.Primary;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
-
-import jakarta.servlet.ServletException;
 import org.springframework.test.web.servlet.MvcResult;
 
 @SpringBootTest
@@ -98,6 +93,52 @@ class SettlementControllerTest {
 	}
 
 	@Test
+	void replaysTheOriginalSettlementWhenTheKeyAndBodyMatch() throws Exception {
+		String receivableId = registerReceivable(DUE_DATE);
+		UUID key = UUID.randomUUID();
+		MvcResult created = settle(receivableId, "USD", key)
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.netAmount").value("17094.67"))
+				.andReturn();
+		String id = com.jayway.jsonpath.JsonPath.read(created.getResponse().getContentAsString(), "$.id");
+
+		settle(receivableId, "USD", key)
+				.andExpect(status().isOk())
+				.andExpect(header().string("Idempotent-Replayed", "true"))
+				.andExpect(jsonPath("$.id").value(id))
+				.andExpect(jsonPath("$.receivableId").value(receivableId))
+				.andExpect(jsonPath("$.paymentCurrency").value("USD"))
+				.andExpect(jsonPath("$.faceValue").value("100000.00"))
+				.andExpect(jsonPath("$.termMonths").value("3"))
+				.andExpect(jsonPath("$.baseRate").value("0.01"))
+				.andExpect(jsonPath("$.spread").value("0.015"))
+				.andExpect(jsonPath("$.presentValueBrl").value("92859.94"))
+				.andExpect(jsonPath("$.discountBrl").value("7140.06"))
+				.andExpect(jsonPath("$.fxRate").value("5.4321"))
+				.andExpect(jsonPath("$.netAmount").value("17094.67"))
+				.andExpect(jsonPath("$.settledAt").value("2026-01-01T12:00:00-03:00"));
+
+		org.junit.jupiter.api.Assertions.assertEquals(1, settlementsOf(receivableId));
+	}
+
+	@Test
+	void rejectsTheSameKeyWhenTheBodyChanges() throws Exception {
+		String receivableId = registerReceivable(DUE_DATE);
+		UUID key = UUID.randomUUID();
+		settle(receivableId, "BRL", key)
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.netAmount").value("92859.94"));
+
+		settle(receivableId, "USD", key)
+				.andExpect(status().isUnprocessableContent())
+				.andExpect(jsonPath("$.code").value("IDEMPOTENCY_KEY_REUSED"));
+
+		org.junit.jupiter.api.Assertions.assertEquals(1, settlementsOf(receivableId));
+		mockMvc.perform(get("/api/v1/receivables/" + receivableId))
+				.andExpect(jsonPath("$.status").value("SETTLED"));
+	}
+
+	@Test
 	void rejectsASecondSettlementOfTheSameReceivable() throws Exception {
 		String receivableId = registerReceivable(DUE_DATE);
 		settle(receivableId, "BRL", UUID.randomUUID()).andExpect(status().isCreated());
@@ -153,8 +194,9 @@ class SettlementControllerTest {
 				values (?::uuid, ?::uuid, ?::uuid, ?, 'BRL', 100000.00, 3, 0.01, 0.015, 92859.94, 7140.06, 92859.94, timestamptz '2026-01-01 12:00:00-03')
 				""", receivableId, cedenteId, UUID.randomUUID(), "a".repeat(64));
 
-		ServletException failure = assertThrows(ServletException.class, () -> settle(receivableId, "BRL", UUID.randomUUID()));
-		assertInstanceOf(DataIntegrityViolationException.class, failure.getCause());
+		settle(receivableId, "BRL", UUID.randomUUID())
+				.andExpect(status().isConflict())
+				.andExpect(jsonPath("$.code").value("RECEIVABLE_ALREADY_SETTLED"));
 
 		mockMvc.perform(get("/api/v1/receivables/" + receivableId))
 				.andExpect(status().isOk())

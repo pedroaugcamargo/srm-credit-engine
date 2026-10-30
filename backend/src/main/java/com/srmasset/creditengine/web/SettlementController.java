@@ -12,8 +12,8 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.srmasset.creditengine.application.IdempotencyKeyRequiredException;
+import com.srmasset.creditengine.application.SettlementResult;
 import com.srmasset.creditengine.application.SettlementService;
-import com.srmasset.creditengine.domain.settlement.SettlementSnapshot;
 
 import jakarta.validation.Valid;
 
@@ -31,15 +31,19 @@ public class SettlementController {
 	public ResponseEntity<SettlementResponse> settle(
 			@RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
 			@Valid @RequestBody SettlementRequest request) {
-		SettlementSnapshot snapshot = settlements.settle(
+		SettlementResult result = settlements.settle(
 				requireKey(idempotencyKey),
 				request.receivableId(),
 				request.paymentCurrency());
+		SettlementResponse body = SettlementResponse.from(result.snapshot());
+		if (result.replayed()) {
+			return ResponseEntity.ok().header("Idempotent-Replayed", "true").body(body);
+		}
 		URI location = ServletUriComponentsBuilder.fromCurrentRequest()
 				.path("/{id}")
-				.buildAndExpand(snapshot.id())
+				.buildAndExpand(result.snapshot().id())
 				.toUri();
-		return ResponseEntity.created(location).body(SettlementResponse.from(snapshot));
+		return ResponseEntity.created(location).body(body);
 	}
 
 	private static UUID requireKey(String idempotencyKey) {
