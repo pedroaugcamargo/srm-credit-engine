@@ -12,6 +12,9 @@ import java.util.HexFormat;
 import java.util.Optional;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.spi.LoggingEventBuilder;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
@@ -37,6 +40,8 @@ import com.srmasset.creditengine.persistence.SettlementRepository;
 
 @Service
 public class SettlementService {
+
+	private static final Logger log = LoggerFactory.getLogger(SettlementService.class);
 
 	private final ReceivableRepository receivables;
 	private final SettlementRepository settlements;
@@ -74,31 +79,38 @@ public class SettlementService {
 		Optional<SettlementEntity> existing = settlements.findByIdempotencyKey(idempotencyKey);
 		if (existing.isPresent()) {
 			if (!sameHash(existing.get(), hash)) {
+				logEvent("rejected", null, receivableId, null);
 				throw new IdempotencyKeyReusedException();
 			}
-			return new SettlementResult(toSnapshot(existing.get()), true);
+			return logged("replayed", toSnapshot(existing.get()));
 		}
 		try {
 			SettlementSnapshot created = transaction.execute(status -> create(idempotencyKey, receivableId, paymentCurrency, hash));
-			return new SettlementResult(created, false);
+			return logged("created", created);
 		} catch (DataIntegrityViolationException exception) {
 			if (causedBy(exception, "settlements_idempotency_key_unique")) {
 				SettlementEntity original = requiresNew.execute(status -> settlements.findByIdempotencyKey(idempotencyKey)
 						.orElseThrow(() -> exception));
-				return new SettlementResult(toSnapshot(original), true);
+				return logged("replayed", toSnapshot(original));
 			}
 			if (causedBy(exception, "settlements_receivable_unique")) {
+				logEvent("conflict", null, receivableId, null);
 				throw new ReceivableAlreadySettledException();
 			}
 			throw exception;
 		} catch (ObjectOptimisticLockingFailureException exception) {
+			logEvent("conflict", null, receivableId, null);
 			throw new ReceivableAlreadySettledException();
 		}
 	}
 
 	private SettlementSnapshot create(UUID idempotencyKey, UUID receivableId, PaymentCurrency paymentCurrency, String hash) {
-		ReceivableEntity receivable = receivables.findById(receivableId).orElseThrow(ReceivableNotFoundException::new);
+		ReceivableEntity receivable = receivables.findById(receivableId).orElseThrow(() -> {
+			logEvent("rejected", null, receivableId, null);
+			return new ReceivableNotFoundException();
+		});
 		if (receivable.getStatus() == ReceivableStatus.SETTLED) {
+			logEvent("conflict", null, receivableId, receivable.getCedenteId());
 			throw new ReceivableAlreadySettledException();
 		}
 
@@ -111,6 +123,7 @@ public class SettlementService {
 		if (paymentCurrency == PaymentCurrency.USD) {
 			FxSelection selection = fxRates.select("USD", "BRL", at);
 			if (selection.stale()) {
+				logEvent("rejected", null, receivableId, receivable.getCedenteId());
 				throw new FxRateStaleException();
 			}
 			fxRateId = selection.quote().id();
@@ -143,6 +156,26 @@ public class SettlementService {
 		settlement.setNetAmount(priced.netAmount());
 		settlement.setSettledAt(OffsetDateTime.now(clock));
 		return toSnapshot(settlements.saveAndFlush(settlement));
+	}
+
+	private static SettlementResult logged(String result, SettlementSnapshot snapshot) {
+		logEvent(result, snapshot.id(), snapshot.receivableId(), snapshot.cedenteId());
+		return new SettlementResult(snapshot, "replayed".equals(result));
+	}
+
+	private static void logEvent(String result, UUID settlementId, UUID receivableId, UUID cedenteId) {
+		LoggingEventBuilder event = log.atInfo().addKeyValue("result", result);
+		event = addId(event, "settlementId", settlementId);
+		event = addId(event, "receivableId", receivableId);
+		event = addId(event, "cedenteId", cedenteId);
+		event.log("Liquidação");
+	}
+
+	private static LoggingEventBuilder addId(LoggingEventBuilder event, String key, UUID value) {
+		if (value == null) {
+			return event;
+		}
+		return event.addKeyValue(key, value.toString());
 	}
 
 	private static boolean sameHash(SettlementEntity settlement, String hash) {
