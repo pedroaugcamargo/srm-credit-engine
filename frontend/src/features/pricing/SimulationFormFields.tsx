@@ -1,18 +1,35 @@
-import type { PaymentCurrency, ReceivableType } from '../../api/types'
-import type { SimulationForm } from './useSimulation'
+import type { Cedente, PaymentCurrency, ReceivableType } from '../../api/types'
+import type { PricingForm } from './useSimulation'
 
 interface SimulationFormFieldsProps {
-  form: SimulationForm
-  onChange: <K extends keyof SimulationForm>(
-    field: K,
-    value: SimulationForm[K],
-  ) => void
+  form: PricingForm
+  cedentes: Cedente[]
+  onChange: <K extends keyof PricingForm>(field: K, value: PricingForm[K]) => void
 }
 
-export function SimulationFormFields({ form, onChange }: SimulationFormFieldsProps) {
+export function SimulationFormFields({
+  form,
+  cedentes,
+  onChange,
+}: SimulationFormFieldsProps) {
   return (
     <fieldset className="simulation-form">
       <legend>Recebível</legend>
+
+      <label>
+        Cedente
+        <select
+          value={form.cedenteId}
+          onChange={(event) => onChange('cedenteId', event.target.value)}
+        >
+          <option value="">Selecione</option>
+          {cedentes.map((cedente) => (
+            <option key={cedente.id} value={cedente.id}>
+              {cedente.nome}
+            </option>
+          ))}
+        </select>
+      </label>
 
       <label>
         Valor de face (R$)

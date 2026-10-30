@@ -1,5 +1,6 @@
 import { ApiError, readProblem } from './problem'
 import type {
+  Cedente,
   ReceivableRequest,
   ReceivableResponse,
   SettlementRequest,
@@ -57,6 +58,11 @@ async function request<T>(
     status: response.status,
     headers: response.headers,
   }
+}
+
+export async function fetchCedentes(signal?: AbortSignal): Promise<Cedente[]> {
+  const { data } = await request<Cedente[]>('/cedentes', { signal })
+  return data
 }
 
 export async function simulatePricing(

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 import { simulatePricing } from '../../api/client'
-import { ApiError } from '../../api/problem'
+import { retryOnlyTransient } from '../../api/problem'
 import type {
   IsoDate,
   PaymentCurrency,
@@ -60,14 +60,6 @@ function sameRequest(
   return JSON.stringify(a) === JSON.stringify(b)
 }
 
-// Erro 4xx é resposta definitiva do backend: repetir não muda o resultado.
-function retryOnlyTransient(failureCount: number, error: Error): boolean {
-  if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
-    return false
-  }
-  return failureCount < 2
-}
-
 /**
  * Simulação em tempo real. A chave da query são os próprios inputs, então
  * cada resposta fica presa aos inputs que a geraram: uma resposta antiga que
@@ -101,13 +93,21 @@ export function useSimulation(form: SimulationForm) {
   }
 }
 
+/** Formulário do painel: os campos da simulação mais o cedente. */
+export interface PricingForm extends SimulationForm {
+  cedenteId: string
+}
+
 /** Estado do formulário do painel de precificação. */
 export function useSimulationForm() {
-  const [form, setForm] = useState<SimulationForm>(EMPTY_SIMULATION_FORM)
+  const [form, setForm] = useState<PricingForm>({
+    ...EMPTY_SIMULATION_FORM,
+    cedenteId: '',
+  })
 
-  function setField<K extends keyof SimulationForm>(
+  function setField<K extends keyof PricingForm>(
     field: K,
-    value: SimulationForm[K],
+    value: PricingForm[K],
   ) {
     setForm((current) => ({ ...current, [field]: value }))
   }

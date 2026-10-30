@@ -33,6 +33,11 @@ export interface SimulationResponse {
   netAmount: Decimal
 }
 
+export interface Cedente {
+  id: string
+  nome: string
+}
+
 export interface ReceivableRequest {
   cedenteId: string
   type: ReceivableType

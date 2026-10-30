@@ -63,3 +63,14 @@ export async function readProblem(response: Response): Promise<ApiError> {
     body,
   )
 }
+
+/**
+ * Regra de retry para TanStack Query: 4xx é resposta definitiva do backend,
+ * repetir não muda o resultado. Rede e 5xx podem ser tentados de novo.
+ */
+export function retryOnlyTransient(failureCount: number, error: Error): boolean {
+  if (error instanceof ApiError && error.status >= 400 && error.status < 500) {
+    return false
+  }
+  return failureCount < 2
+}
