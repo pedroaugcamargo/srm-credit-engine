@@ -15,13 +15,16 @@ import org.junit.jupiter.params.provider.MethodSource;
 import com.srmasset.creditengine.domain.pricing.strategy.ChequeStrategy;
 import com.srmasset.creditengine.domain.pricing.strategy.DuplicataMercantilStrategy;
 
+import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
+
 class PricingEngineTest {
 
 	private final PricingEngine engine = new PricingEngine(
 			new PricingStrategyRegistry(List.of(new DuplicataMercantilStrategy(), new ChequeStrategy())),
 			new RoundingPolicy(2, RoundingMode.HALF_EVEN),
 			new BigDecimal("0.01"),
-			() -> new BigDecimal("5.4321"));
+			() -> new BigDecimal("5.4321"),
+			new SimpleMeterRegistry());
 
 	@ParameterizedTest(name = "{0}")
 	@MethodSource("goldenCases")

@@ -8,6 +8,10 @@ import org.springframework.context.annotation.Configuration;
 
 import com.srmasset.creditengine.domain.fx.ExternalFxClient;
 
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry;
+import io.github.resilience4j.micrometer.tagged.TaggedCircuitBreakerMetrics;
+import io.micrometer.core.instrument.MeterRegistry;
+
 @Configuration
 class ExternalFxClientConfig {
 
@@ -21,11 +25,23 @@ class ExternalFxClientConfig {
 	}
 
 	@Bean
-	ExternalFxClient externalFxClient(ExternalFxProviderProperties properties, ScheduledExecutorService externalFxScheduler) {
+	CircuitBreakerRegistry externalFxCircuitBreakers() {
+		return CircuitBreakerRegistry.ofDefaults();
+	}
+
+	@Bean
+	ExternalFxClient externalFxClient(
+			ExternalFxProviderProperties properties,
+			ScheduledExecutorService externalFxScheduler,
+			CircuitBreakerRegistry externalFxCircuitBreakers,
+			MeterRegistry meterRegistry) {
+		TaggedCircuitBreakerMetrics.ofCircuitBreakerRegistry(externalFxCircuitBreakers).bindTo(meterRegistry);
 		return ResilientExternalFxClient.create(
 				new ConfigurableExternalFxClient(properties),
 				properties,
-				externalFxScheduler);
+				externalFxScheduler,
+				externalFxCircuitBreakers,
+				meterRegistry);
 	}
 
 }

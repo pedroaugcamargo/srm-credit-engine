@@ -8,6 +8,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import ch.obermuhlner.math.big.BigDecimalMath;
+import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Timer;
 
 @Component
 public final class PricingEngine {
@@ -18,16 +20,21 @@ public final class PricingEngine {
 	private final RoundingPolicy roundingPolicy;
 	private final BigDecimal baseRate;
 	private final FxRateProvider fxRateProvider;
+	private final Timer pricingDuration;
 
 	public PricingEngine(
 			PricingStrategyRegistry strategies,
 			RoundingPolicy roundingPolicy,
 			@Value("${credit-engine.pricing.base-rate}") BigDecimal baseRate,
-			FxRateProvider fxRateProvider) {
+			FxRateProvider fxRateProvider,
+			MeterRegistry meterRegistry) {
 		this.strategies = Objects.requireNonNull(strategies, "strategies");
 		this.roundingPolicy = Objects.requireNonNull(roundingPolicy, "roundingPolicy");
 		this.baseRate = Objects.requireNonNull(baseRate, "baseRate");
 		this.fxRateProvider = Objects.requireNonNull(fxRateProvider, "fxRateProvider");
+		this.pricingDuration = Timer.builder("pricing_engine_duration")
+				.publishPercentiles(0.95)
+				.register(meterRegistry);
 	}
 
 	public PricingResult price(PricingInput input) {
@@ -37,6 +44,10 @@ public final class PricingEngine {
 	}
 
 	public PricingResult price(PricingInput input, BigDecimal resolvedBaseRate, BigDecimal fxRate) {
+		return pricingDuration.record(() -> calculate(input, resolvedBaseRate, fxRate));
+	}
+
+	private PricingResult calculate(PricingInput input, BigDecimal resolvedBaseRate, BigDecimal fxRate) {
 		Objects.requireNonNull(input, "input");
 		Objects.requireNonNull(resolvedBaseRate, "baseRate");
 		PricingContext context = new PricingContext(input.faceValue(), input.termMonths());

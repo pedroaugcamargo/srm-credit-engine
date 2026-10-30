@@ -23,6 +23,8 @@ import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import com.srmasset.creditengine.domain.fx.FxRateStaleException;
+
+import io.micrometer.core.instrument.MeterRegistry;
 import com.srmasset.creditengine.domain.fx.FxSelection;
 import com.srmasset.creditengine.domain.pricing.PaymentCurrency;
 import com.srmasset.creditengine.domain.pricing.PricingEngine;
@@ -50,6 +52,7 @@ public class SettlementService {
 	private final PricingEngine engine;
 	private final TermCalculator termCalculator;
 	private final Clock clock;
+	private final MeterRegistry meterRegistry;
 	private final TransactionTemplate transaction;
 	private final TransactionTemplate requiresNew;
 
@@ -61,6 +64,7 @@ public class SettlementService {
 			PricingEngine engine,
 			TermCalculator termCalculator,
 			Clock clock,
+			MeterRegistry meterRegistry,
 			PlatformTransactionManager transactions) {
 		this.receivables = receivables;
 		this.settlements = settlements;
@@ -69,6 +73,7 @@ public class SettlementService {
 		this.engine = engine;
 		this.termCalculator = termCalculator;
 		this.clock = clock;
+		this.meterRegistry = meterRegistry;
 		this.transaction = new TransactionTemplate(transactions);
 		this.requiresNew = new TransactionTemplate(transactions);
 		this.requiresNew.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
@@ -79,38 +84,38 @@ public class SettlementService {
 		Optional<SettlementEntity> existing = settlements.findByIdempotencyKey(idempotencyKey);
 		if (existing.isPresent()) {
 			if (!sameHash(existing.get(), hash)) {
-				logEvent("rejected", null, receivableId, null);
+				logEvent("rejected", null, receivableId, null, paymentCurrency);
 				throw new IdempotencyKeyReusedException();
 			}
-			return logged("replayed", toSnapshot(existing.get()));
+			return logged("replayed", toSnapshot(existing.get()), paymentCurrency);
 		}
 		try {
 			SettlementSnapshot created = transaction.execute(status -> create(idempotencyKey, receivableId, paymentCurrency, hash));
-			return logged("created", created);
+			return logged("created", created, paymentCurrency);
 		} catch (DataIntegrityViolationException exception) {
 			if (causedBy(exception, "settlements_idempotency_key_unique")) {
 				SettlementEntity original = requiresNew.execute(status -> settlements.findByIdempotencyKey(idempotencyKey)
 						.orElseThrow(() -> exception));
-				return logged("replayed", toSnapshot(original));
+				return logged("replayed", toSnapshot(original), paymentCurrency);
 			}
 			if (causedBy(exception, "settlements_receivable_unique")) {
-				logEvent("conflict", null, receivableId, null);
+				logEvent("conflict", null, receivableId, null, paymentCurrency);
 				throw new ReceivableAlreadySettledException();
 			}
 			throw exception;
 		} catch (ObjectOptimisticLockingFailureException exception) {
-			logEvent("conflict", null, receivableId, null);
+			logEvent("conflict", null, receivableId, null, paymentCurrency);
 			throw new ReceivableAlreadySettledException();
 		}
 	}
 
 	private SettlementSnapshot create(UUID idempotencyKey, UUID receivableId, PaymentCurrency paymentCurrency, String hash) {
 		ReceivableEntity receivable = receivables.findById(receivableId).orElseThrow(() -> {
-			logEvent("rejected", null, receivableId, null);
+			logEvent("rejected", null, receivableId, null, paymentCurrency);
 			return new ReceivableNotFoundException();
 		});
 		if (receivable.getStatus() == ReceivableStatus.SETTLED) {
-			logEvent("conflict", null, receivableId, receivable.getCedenteId());
+			logEvent("conflict", null, receivableId, receivable.getCedenteId(), paymentCurrency);
 			throw new ReceivableAlreadySettledException();
 		}
 
@@ -123,7 +128,7 @@ public class SettlementService {
 		if (paymentCurrency == PaymentCurrency.USD) {
 			FxSelection selection = fxRates.select("USD", "BRL", at);
 			if (selection.stale()) {
-				logEvent("rejected", null, receivableId, receivable.getCedenteId());
+				logEvent("rejected", null, receivableId, receivable.getCedenteId(), paymentCurrency);
 				throw new FxRateStaleException();
 			}
 			fxRateId = selection.quote().id();
@@ -158,17 +163,18 @@ public class SettlementService {
 		return toSnapshot(settlements.saveAndFlush(settlement));
 	}
 
-	private static SettlementResult logged(String result, SettlementSnapshot snapshot) {
-		logEvent(result, snapshot.id(), snapshot.receivableId(), snapshot.cedenteId());
+	private SettlementResult logged(String result, SettlementSnapshot snapshot, PaymentCurrency currency) {
+		logEvent(result, snapshot.id(), snapshot.receivableId(), snapshot.cedenteId(), currency);
 		return new SettlementResult(snapshot, "replayed".equals(result));
 	}
 
-	private static void logEvent(String result, UUID settlementId, UUID receivableId, UUID cedenteId) {
+	private void logEvent(String result, UUID settlementId, UUID receivableId, UUID cedenteId, PaymentCurrency currency) {
 		LoggingEventBuilder event = log.atInfo().addKeyValue("result", result);
 		event = addId(event, "settlementId", settlementId);
 		event = addId(event, "receivableId", receivableId);
 		event = addId(event, "cedenteId", cedenteId);
 		event.log("Liquidação");
+		meterRegistry.counter("settlements", "currency", currency.name(), "result", result).increment();
 	}
 
 	private static LoggingEventBuilder addId(LoggingEventBuilder event, String key, UUID value) {
