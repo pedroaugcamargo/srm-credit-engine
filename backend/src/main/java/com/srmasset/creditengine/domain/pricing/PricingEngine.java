@@ -32,9 +32,16 @@ public final class PricingEngine {
 
 	public PricingResult price(PricingInput input) {
 		Objects.requireNonNull(input, "input");
+		BigDecimal fxRate = input.paymentCurrency() == PaymentCurrency.USD ? fxRateProvider.brlPerUsd() : null;
+		return price(input, baseRate, fxRate);
+	}
+
+	public PricingResult price(PricingInput input, BigDecimal resolvedBaseRate, BigDecimal fxRate) {
+		Objects.requireNonNull(input, "input");
+		Objects.requireNonNull(resolvedBaseRate, "baseRate");
 		PricingContext context = new PricingContext(input.faceValue(), input.termMonths());
 		BigDecimal spread = strategies.monthlySpread(input.receivableType(), context);
-		BigDecimal monthlyRate = baseRate.add(spread, MATH);
+		BigDecimal monthlyRate = resolvedBaseRate.add(spread, MATH);
 		BigDecimal factor = compoundFactor(BigDecimal.ONE.add(monthlyRate, MATH), input.termMonths());
 		BigDecimal presentValueBrl = roundingPolicy.round(input.faceValue().divide(factor, MATH));
 		BigDecimal discountBrl = input.faceValue().subtract(presentValueBrl);
@@ -42,15 +49,15 @@ public final class PricingEngine {
 		Settlement settlement = switch (input.paymentCurrency()) {
 			case BRL -> new Settlement(null, presentValueBrl);
 			case USD -> {
-				BigDecimal fxRate = Objects.requireNonNull(fxRateProvider.brlPerUsd(), "fxRate");
-				yield new Settlement(fxRate, roundingPolicy.round(presentValueBrl.divide(fxRate, MATH)));
+				BigDecimal rate = Objects.requireNonNull(fxRate, "fxRate");
+				yield new Settlement(rate, roundingPolicy.round(presentValueBrl.divide(rate, MATH)));
 			}
 		};
 
 		return new PricingResult(
 				input.faceValue(),
 				input.termMonths(),
-				baseRate,
+				resolvedBaseRate,
 				spread,
 				presentValueBrl,
 				discountBrl,
