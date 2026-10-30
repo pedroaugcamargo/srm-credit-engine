@@ -92,10 +92,10 @@ public interface PricingStrategy {
 
 ## Definition of done
 
-- [ ] Golden cases verdes localmente e no CI.
-- [ ] Nenhum `double` ou `float` no pacote `domain`.
-- [ ] Swagger exibe o endpoint com exemplo de request e response.
-- [ ] PR descreve o porquê das decisões e registra o que a IA errou nesta entrega (alimenta o `AI_USAGE.md`).
+- [x] Golden cases verdes localmente e no CI.
+- [x] Nenhum `double` ou `float` no pacote `domain`.
+- [x] Swagger exibe o endpoint com exemplo de request e response.
+- [x] PR descreve o porquê das decisões e registra o que a IA errou nesta entrega (alimenta o `AI_USAGE.md`).
 
 ## Instruções para o agente de IA
 
