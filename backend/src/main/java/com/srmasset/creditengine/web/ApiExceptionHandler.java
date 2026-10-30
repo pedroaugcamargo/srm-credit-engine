@@ -8,7 +8,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.srmasset.creditengine.application.CedenteNotFoundException;
+import com.srmasset.creditengine.application.IdempotencyKeyRequiredException;
+import com.srmasset.creditengine.application.ReceivableAlreadySettledException;
 import com.srmasset.creditengine.application.ReceivableNotFoundException;
+import com.srmasset.creditengine.domain.fx.FxRateStaleException;
 import com.srmasset.creditengine.domain.fx.FxRateUnavailableException;
 import com.srmasset.creditengine.domain.pricing.InvalidTermException;
 
@@ -35,6 +38,29 @@ public class ApiExceptionHandler {
 	ProblemDetail cedenteNotFound(CedenteNotFoundException exception) {
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
 		problem.setProperty("code", "CEDENTE_NOT_FOUND");
+		return problem;
+	}
+
+	@ExceptionHandler(ReceivableAlreadySettledException.class)
+	ProblemDetail receivableAlreadySettled(ReceivableAlreadySettledException exception) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+		problem.setProperty("code", "RECEIVABLE_ALREADY_SETTLED");
+		return problem;
+	}
+
+	@ExceptionHandler(IdempotencyKeyRequiredException.class)
+	ProblemDetail idempotencyKeyRequired(IdempotencyKeyRequiredException exception) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+		problem.setProperty("code", "IDEMPOTENCY_KEY_REQUIRED");
+		return problem;
+	}
+
+	@ExceptionHandler(FxRateStaleException.class)
+	ProblemDetail fxRateStale(FxRateStaleException exception) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+				HttpStatus.UNPROCESSABLE_CONTENT,
+				exception.getMessage());
+		problem.setProperty("code", "FX_RATE_STALE");
 		return problem;
 	}
 
