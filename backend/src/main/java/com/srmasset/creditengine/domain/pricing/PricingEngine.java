@@ -22,18 +22,14 @@ public final class PricingEngine {
 	private final FxRateProvider fxRateProvider;
 	private final Timer pricingDuration;
 
-	public PricingEngine(
-			PricingStrategyRegistry strategies,
-			RoundingPolicy roundingPolicy,
-			@Value("${credit-engine.pricing.base-rate}") BigDecimal baseRate,
-			FxRateProvider fxRateProvider,
+	public PricingEngine(PricingStrategyRegistry strategies, RoundingPolicy roundingPolicy,
+			@Value("${credit-engine.pricing.base-rate}") BigDecimal baseRate, FxRateProvider fxRateProvider,
 			MeterRegistry meterRegistry) {
 		this.strategies = Objects.requireNonNull(strategies, "strategies");
 		this.roundingPolicy = Objects.requireNonNull(roundingPolicy, "roundingPolicy");
 		this.baseRate = Objects.requireNonNull(baseRate, "baseRate");
 		this.fxRateProvider = Objects.requireNonNull(fxRateProvider, "fxRateProvider");
-		this.pricingDuration = Timer.builder("pricing_engine_duration")
-				.publishPercentiles(0.95)
+		this.pricingDuration = Timer.builder("pricing_engine_duration").publishPercentiles(0.95)
 				.register(meterRegistry);
 	}
 
@@ -65,16 +61,8 @@ public final class PricingEngine {
 			}
 		};
 
-		return new PricingResult(
-				input.faceValue(),
-				input.termMonths(),
-				resolvedBaseRate,
-				spread,
-				presentValueBrl,
-				discountBrl,
-				input.paymentCurrency(),
-				settlement.fxRate(),
-				settlement.netAmount());
+		return new PricingResult(input.faceValue(), input.termMonths(), resolvedBaseRate, spread, presentValueBrl,
+				discountBrl, input.paymentCurrency(), settlement.fxRate(), settlement.netAmount());
 	}
 
 	private record Settlement(BigDecimal fxRate, BigDecimal netAmount) {

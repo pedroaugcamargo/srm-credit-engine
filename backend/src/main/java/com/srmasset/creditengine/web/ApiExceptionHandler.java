@@ -23,8 +23,7 @@ public class ApiExceptionHandler {
 
 	@ExceptionHandler(InvalidTermException.class)
 	ProblemDetail invalidTerm(InvalidTermException exception) {
-		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-				HttpStatus.UNPROCESSABLE_CONTENT,
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT,
 				"O vencimento precisa ser posterior à data da operação.");
 		problem.setProperty("code", "INVALID_TERM");
 		return problem;
@@ -53,8 +52,7 @@ public class ApiExceptionHandler {
 
 	@ExceptionHandler(IdempotencyKeyReusedException.class)
 	ProblemDetail idempotencyKeyReused(IdempotencyKeyReusedException exception) {
-		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-				HttpStatus.UNPROCESSABLE_CONTENT,
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT,
 				exception.getMessage());
 		problem.setProperty("code", "IDEMPOTENCY_KEY_REUSED");
 		return problem;
@@ -70,8 +68,7 @@ public class ApiExceptionHandler {
 	@ExceptionHandler(MissingServletRequestParameterException.class)
 	ProblemDetail missingParameter(MissingServletRequestParameterException exception) {
 		boolean period = "from".equals(exception.getParameterName()) || "to".equals(exception.getParameterName());
-		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-				HttpStatus.BAD_REQUEST,
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
 				period ? "Informe o período." : "A requisição contém dados inválidos.");
 		problem.setProperty("code", period ? "STATEMENT_QUERY_INVALID" : "VALIDATION_ERROR");
 		return problem;
@@ -86,8 +83,7 @@ public class ApiExceptionHandler {
 
 	@ExceptionHandler(FxRateStaleException.class)
 	ProblemDetail fxRateStale(FxRateStaleException exception) {
-		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-				HttpStatus.UNPROCESSABLE_CONTENT,
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT,
 				exception.getMessage());
 		problem.setProperty("code", "FX_RATE_STALE");
 		return problem;
@@ -95,17 +91,15 @@ public class ApiExceptionHandler {
 
 	@ExceptionHandler(FxRateUnavailableException.class)
 	ProblemDetail fxRateUnavailable(FxRateUnavailableException exception) {
-		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-				HttpStatus.UNPROCESSABLE_CONTENT,
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT,
 				exception.getMessage());
 		problem.setProperty("code", "FX_RATE_UNAVAILABLE");
 		return problem;
 	}
 
-	@ExceptionHandler({ MethodArgumentNotValidException.class, HttpMessageNotReadableException.class })
+	@ExceptionHandler({MethodArgumentNotValidException.class, HttpMessageNotReadableException.class})
 	ProblemDetail validation(Exception exception) {
-		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-				HttpStatus.BAD_REQUEST,
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
 				"A requisição contém dados inválidos.");
 		problem.setProperty("code", "VALIDATION_ERROR");
 		return problem;

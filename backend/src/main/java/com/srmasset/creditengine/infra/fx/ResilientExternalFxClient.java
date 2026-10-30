@@ -33,13 +33,8 @@ public final class ResilientExternalFxClient implements ExternalFxClient {
 	private final ScheduledExecutorService scheduler;
 	private final MeterRegistry meterRegistry;
 
-	public ResilientExternalFxClient(
-			ExternalFxClient delegate,
-			TimeLimiter timeLimiter,
-			Retry retry,
-			CircuitBreaker circuitBreaker,
-			ScheduledExecutorService scheduler,
-			MeterRegistry meterRegistry) {
+	public ResilientExternalFxClient(ExternalFxClient delegate, TimeLimiter timeLimiter, Retry retry,
+			CircuitBreaker circuitBreaker, ScheduledExecutorService scheduler, MeterRegistry meterRegistry) {
 		this.delegate = delegate;
 		this.timeLimiter = timeLimiter;
 		this.retry = retry;
@@ -48,50 +43,36 @@ public final class ResilientExternalFxClient implements ExternalFxClient {
 		this.meterRegistry = meterRegistry;
 	}
 
-	public static ResilientExternalFxClient create(
-			ExternalFxClient delegate,
-			ExternalFxProviderProperties properties,
+	public static ResilientExternalFxClient create(ExternalFxClient delegate, ExternalFxProviderProperties properties,
 			ScheduledExecutorService scheduler) {
 		return create(delegate, properties, scheduler, CircuitBreakerRegistry.ofDefaults(), new SimpleMeterRegistry());
 	}
 
-	public static ResilientExternalFxClient create(
-			ExternalFxClient delegate,
-			ExternalFxProviderProperties properties,
-			ScheduledExecutorService scheduler,
-			CircuitBreakerRegistry circuitBreakers,
-			MeterRegistry meterRegistry) {
-		TimeLimiter timeLimiter = TimeLimiter.of(TimeLimiterConfig.custom()
-				.timeoutDuration(properties.timeout())
-				.cancelRunningFuture(true)
-				.build());
-		Retry retry = Retry.of("externalFx", RetryConfig.custom()
-				.maxAttempts(properties.maxRetries() + 1)
-				.intervalFunction(IntervalFunction.ofExponentialBackoff(properties.retryInitialInterval(), 2d))
-				.retryOnException(ResilientExternalFxClient::isRetryable)
-				.build());
-		CircuitBreaker circuitBreaker = circuitBreakers.circuitBreaker("externalFx", CircuitBreakerConfig.custom()
-				.slidingWindowType(SlidingWindowType.COUNT_BASED)
-				.slidingWindowSize(properties.circuitWindowSize())
-				.minimumNumberOfCalls(properties.circuitWindowSize())
-				.failureRateThreshold(properties.circuitFailureRate())
-				.waitDurationInOpenState(properties.circuitOpenWait())
-				.permittedNumberOfCallsInHalfOpenState(1)
-				.build());
-		return new ResilientExternalFxClient(
-				measured(delegate, meterRegistry),
-				timeLimiter,
-				retry,
-				circuitBreaker,
-				scheduler,
-				meterRegistry);
+	public static ResilientExternalFxClient create(ExternalFxClient delegate, ExternalFxProviderProperties properties,
+			ScheduledExecutorService scheduler, CircuitBreakerRegistry circuitBreakers, MeterRegistry meterRegistry) {
+		TimeLimiter timeLimiter = TimeLimiter
+				.of(TimeLimiterConfig.custom().timeoutDuration(properties.timeout()).cancelRunningFuture(true).build());
+		Retry retry = Retry.of("externalFx",
+				RetryConfig.custom().maxAttempts(properties.maxRetries() + 1)
+						.intervalFunction(IntervalFunction.ofExponentialBackoff(properties.retryInitialInterval(), 2d))
+						.retryOnException(ResilientExternalFxClient::isRetryable).build());
+		CircuitBreaker circuitBreaker = circuitBreakers.circuitBreaker("externalFx",
+				CircuitBreakerConfig.custom().slidingWindowType(SlidingWindowType.COUNT_BASED)
+						.slidingWindowSize(properties.circuitWindowSize())
+						.minimumNumberOfCalls(properties.circuitWindowSize())
+						.failureRateThreshold(properties.circuitFailureRate())
+						.waitDurationInOpenState(properties.circuitOpenWait()).permittedNumberOfCallsInHalfOpenState(1)
+						.build());
+		return new ResilientExternalFxClient(measured(delegate, meterRegistry), timeLimiter, retry, circuitBreaker,
+				scheduler, meterRegistry);
 	}
 
 	@Override
 	public ExternalFxQuote fetch(String base, String quote) {
 		try {
-			return circuitBreaker.executeCheckedSupplier(() -> retry.executeCheckedSupplier(() -> timeLimiter
-					.executeFutureSupplier(() -> CompletableFuture.supplyAsync(() -> delegate.fetch(base, quote), scheduler))));
+			return circuitBreaker
+					.executeCheckedSupplier(() -> retry.executeCheckedSupplier(() -> timeLimiter.executeFutureSupplier(
+							() -> CompletableFuture.supplyAsync(() -> delegate.fetch(base, quote), scheduler))));
 		} catch (TimeoutException exception) {
 			throw new ExternalFxTimeoutException(exception);
 		} catch (CallNotPermittedException exception) {

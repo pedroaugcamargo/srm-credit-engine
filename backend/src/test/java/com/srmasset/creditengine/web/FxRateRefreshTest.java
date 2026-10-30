@@ -19,11 +19,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.srmasset.creditengine.application.FxRateRefreshScheduler;
 
-@SpringBootTest(properties = {
-		"credit-engine.fx.provider.failure=NONE",
-		"credit-engine.fx.provider.rate=5.6",
-		"credit-engine.fx.provider.valid-from=2026-10-29T10:00:00-03:00"
-})
+@SpringBootTest(properties = {"credit-engine.fx.provider.failure=NONE", "credit-engine.fx.provider.rate=5.6",
+		"credit-engine.fx.provider.valid-from=2026-10-29T10:00:00-03:00"})
 @AutoConfigureMockMvc
 @Transactional
 class FxRateRefreshTest {
@@ -42,10 +39,8 @@ class FxRateRefreshTest {
 		assertNull(scheduler.getIfAvailable());
 		assertEquals(0, new BigDecimal("5.4321").compareTo(rateOf("SEED")));
 
-		mockMvc.perform(post("/api/v1/fx-rates/refresh"))
-				.andExpect(status().isCreated())
-				.andExpect(jsonPath("$.base").value("USD"))
-				.andExpect(jsonPath("$.quote").value("BRL"))
+		mockMvc.perform(post("/api/v1/fx-rates/refresh")).andExpect(status().isCreated())
+				.andExpect(jsonPath("$.base").value("USD")).andExpect(jsonPath("$.quote").value("BRL"))
 				.andExpect(jsonPath("$.rate").value("5.6"))
 				.andExpect(jsonPath("$.validFrom").value("2026-10-29T10:00:00-03:00"));
 
@@ -56,17 +51,11 @@ class FxRateRefreshTest {
 	}
 
 	private BigDecimal rateOf(String source) {
-		return jdbc.queryForObject(
-				"select rate from fx_rates where source = ?",
-				BigDecimal.class,
-				source);
+		return jdbc.queryForObject("select rate from fx_rates where source = ?", BigDecimal.class, source);
 	}
 
 	private int countOf(String source) {
-		return jdbc.queryForObject(
-				"select count(*) from fx_rates where source = ?",
-				Integer.class,
-				source);
+		return jdbc.queryForObject("select count(*) from fx_rates where source = ?", Integer.class, source);
 	}
 
 }

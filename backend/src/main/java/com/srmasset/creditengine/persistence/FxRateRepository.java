@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface FxRateRepository extends JpaRepository<FxRateEntity, UUID> {
 
-	List<FxRateEntity> findByBaseCurrencyAndQuoteCurrencyAndValidFromLessThanEqual(String baseCurrency, String quoteCurrency, OffsetDateTime validFrom);
+	List<FxRateEntity> findByBaseCurrencyAndQuoteCurrencyAndValidFromLessThanEqual(String baseCurrency,
+			String quoteCurrency, OffsetDateTime validFrom);
 
 }

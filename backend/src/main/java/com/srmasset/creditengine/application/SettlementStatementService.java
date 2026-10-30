@@ -22,13 +22,8 @@ public class SettlementStatementService {
 		this.statements = statements;
 	}
 
-	public StatementPage statement(
-			OffsetDateTime from,
-			OffsetDateTime to,
-			UUID cedenteId,
-			PaymentCurrency currency,
-			int page,
-			int size) {
+	public StatementPage statement(OffsetDateTime from, OffsetDateTime to, UUID cedenteId, PaymentCurrency currency,
+			int page, int size) {
 		if (from.isAfter(to)) {
 			throw new StatementQueryException("O período está invertido.");
 		}

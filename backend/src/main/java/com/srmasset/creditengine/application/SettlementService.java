@@ -56,16 +56,9 @@ public class SettlementService {
 	private final TransactionTemplate transaction;
 	private final TransactionTemplate requiresNew;
 
-	public SettlementService(
-			ReceivableRepository receivables,
-			SettlementRepository settlements,
-			DbBaseRateProvider baseRates,
-			DbFxRateProvider fxRates,
-			PricingEngine engine,
-			TermCalculator termCalculator,
-			Clock clock,
-			MeterRegistry meterRegistry,
-			PlatformTransactionManager transactions) {
+	public SettlementService(ReceivableRepository receivables, SettlementRepository settlements,
+			DbBaseRateProvider baseRates, DbFxRateProvider fxRates, PricingEngine engine, TermCalculator termCalculator,
+			Clock clock, MeterRegistry meterRegistry, PlatformTransactionManager transactions) {
 		this.receivables = receivables;
 		this.settlements = settlements;
 		this.baseRates = baseRates;
@@ -90,12 +83,13 @@ public class SettlementService {
 			return logged("replayed", toSnapshot(existing.get()), paymentCurrency);
 		}
 		try {
-			SettlementSnapshot created = transaction.execute(status -> create(idempotencyKey, receivableId, paymentCurrency, hash));
+			SettlementSnapshot created = transaction
+					.execute(status -> create(idempotencyKey, receivableId, paymentCurrency, hash));
 			return logged("created", created, paymentCurrency);
 		} catch (DataIntegrityViolationException exception) {
 			if (causedBy(exception, "settlements_idempotency_key_unique")) {
-				SettlementEntity original = requiresNew.execute(status -> settlements.findByIdempotencyKey(idempotencyKey)
-						.orElseThrow(() -> exception));
+				SettlementEntity original = requiresNew.execute(
+						status -> settlements.findByIdempotencyKey(idempotencyKey).orElseThrow(() -> exception));
 				return logged("replayed", toSnapshot(original), paymentCurrency);
 			}
 			if (causedBy(exception, "settlements_receivable_unique")) {
@@ -109,7 +103,8 @@ public class SettlementService {
 		}
 	}
 
-	private SettlementSnapshot create(UUID idempotencyKey, UUID receivableId, PaymentCurrency paymentCurrency, String hash) {
+	private SettlementSnapshot create(UUID idempotencyKey, UUID receivableId, PaymentCurrency paymentCurrency,
+			String hash) {
 		ReceivableEntity receivable = receivables.findById(receivableId).orElseThrow(() -> {
 			logEvent("rejected", null, receivableId, null, paymentCurrency);
 			return new ReceivableNotFoundException();
@@ -138,8 +133,7 @@ public class SettlementService {
 
 		PricingResult priced = engine.price(
 				new PricingInput(receivable.getFaceValue(), receivable.getType(), termMonths, paymentCurrency),
-				baseRate,
-				fxRate);
+				baseRate, fxRate);
 
 		receivable.setStatus(ReceivableStatus.SETTLED);
 		receivables.saveAndFlush(receivable);
@@ -168,7 +162,8 @@ public class SettlementService {
 		return new SettlementResult(snapshot, "replayed".equals(result));
 	}
 
-	private void logEvent(String result, UUID settlementId, UUID receivableId, UUID cedenteId, PaymentCurrency currency) {
+	private void logEvent(String result, UUID settlementId, UUID receivableId, UUID cedenteId,
+			PaymentCurrency currency) {
 		LoggingEventBuilder event = log.atInfo().addKeyValue("result", result);
 		event = addId(event, "settlementId", settlementId);
 		event = addId(event, "receivableId", receivableId);
@@ -211,23 +206,11 @@ public class SettlementService {
 	}
 
 	private static SettlementSnapshot toSnapshot(SettlementEntity settlement) {
-		return new SettlementSnapshot(
-				settlement.getId(),
-				settlement.getReceivableId(),
-				settlement.getCedenteId(),
-				settlement.getIdempotencyKey(),
-				settlement.getRequestHash(),
-				settlement.getPaymentCurrency(),
-				settlement.getFaceValue(),
-				settlement.getTermMonths(),
-				settlement.getBaseRate(),
-				settlement.getSpread(),
-				settlement.getPresentValueBrl(),
-				settlement.getDiscountBrl(),
-				settlement.getFxRateId(),
-				settlement.getFxRate(),
-				settlement.getNetAmount(),
-				settlement.getSettledAt());
+		return new SettlementSnapshot(settlement.getId(), settlement.getReceivableId(), settlement.getCedenteId(),
+				settlement.getIdempotencyKey(), settlement.getRequestHash(), settlement.getPaymentCurrency(),
+				settlement.getFaceValue(), settlement.getTermMonths(), settlement.getBaseRate(), settlement.getSpread(),
+				settlement.getPresentValueBrl(), settlement.getDiscountBrl(), settlement.getFxRateId(),
+				settlement.getFxRate(), settlement.getNetAmount(), settlement.getSettledAt());
 	}
 
 }

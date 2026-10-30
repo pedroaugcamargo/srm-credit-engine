@@ -53,10 +53,8 @@ class SettlementCorrelationLogTest {
 		Cedente cedente = cedente();
 		String receivableId = registerReceivable(cedente.id());
 
-		MvcResult created = settle(receivableId, CORRELATION_ID)
-				.andExpect(status().isCreated())
-				.andExpect(header().string("X-Correlation-Id", CORRELATION_ID))
-				.andReturn();
+		MvcResult created = settle(receivableId, CORRELATION_ID).andExpect(status().isCreated())
+				.andExpect(header().string("X-Correlation-Id", CORRELATION_ID)).andReturn();
 		String settlementId = JsonPath.read(created.getResponse().getContentAsString(), "$.id");
 
 		String event = createdEvent(output.getAll(), CORRELATION_ID);
@@ -77,9 +75,7 @@ class SettlementCorrelationLogTest {
 		Cedente cedente = cedente();
 		String receivableId = registerReceivable(cedente.id());
 
-		MvcResult created = settle(receivableId, null)
-				.andExpect(status().isCreated())
-				.andReturn();
+		MvcResult created = settle(receivableId, null).andExpect(status().isCreated()).andReturn();
 		String correlationId = created.getResponse().getHeader("X-Correlation-Id");
 		assertNotNull(correlationId);
 		UUID.fromString(correlationId);
@@ -96,33 +92,28 @@ class SettlementCorrelationLogTest {
 	}
 
 	private Cedente cedente() {
-		return jdbc.queryForObject(
-				"select id::text, nome, documento from cedentes where documento = ?",
+		return jdbc.queryForObject("select id::text, nome, documento from cedentes where documento = ?",
 				(rs, rowNum) -> new Cedente(rs.getString("id"), rs.getString("nome"), rs.getString("documento")),
 				"DOC-DEMO-001");
 	}
 
 	private String registerReceivable(String cedenteId) throws Exception {
-		MvcResult created = mockMvc.perform(post("/api/v1/receivables")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("""
+		MvcResult created = mockMvc
+				.perform(post("/api/v1/receivables").contentType(MediaType.APPLICATION_JSON).content("""
 						{
 						  "cedenteId": "%s",
 						  "type": "DUPLICATA_MERCANTIL",
 						  "faceValue": "100000.00",
 						  "dueDate": "%s"
 						}
-						""".formatted(cedenteId, DUE_DATE)))
-				.andExpect(status().isCreated())
-				.andReturn();
+						""".formatted(cedenteId, DUE_DATE))).andExpect(status().isCreated()).andReturn();
 		return JsonPath.read(created.getResponse().getContentAsString(), "$.id");
 	}
 
-	private org.springframework.test.web.servlet.ResultActions settle(String receivableId, String correlationId) throws Exception {
-		var request = post("/api/v1/settlements")
-				.header("Idempotency-Key", UUID.randomUUID())
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("""
+	private org.springframework.test.web.servlet.ResultActions settle(String receivableId, String correlationId)
+			throws Exception {
+		var request = post("/api/v1/settlements").header("Idempotency-Key", UUID.randomUUID())
+				.contentType(MediaType.APPLICATION_JSON).content("""
 						{
 						  "receivableId": "%s",
 						  "paymentCurrency": "BRL"

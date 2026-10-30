@@ -11,17 +11,8 @@ import com.srmasset.creditengine.domain.pricing.PaymentCurrency;
 
 public record StatementResponse(List<Item> items, int page, int size, long totalElements) {
 
-	public record Item(
-			UUID id,
-			UUID cedenteId,
-			String cedenteNome,
-			UUID receivableId,
-			PaymentCurrency paymentCurrency,
-			String faceValue,
-			String presentValueBrl,
-			String fxRate,
-			String netAmount,
-			OffsetDateTime settledAt) {
+	public record Item(UUID id, UUID cedenteId, String cedenteNome, UUID receivableId, PaymentCurrency paymentCurrency,
+			String faceValue, String presentValueBrl, String fxRate, String netAmount, OffsetDateTime settledAt) {
 	}
 
 	static StatementResponse from(StatementPage statement) {
@@ -30,17 +21,10 @@ public record StatementResponse(List<Item> items, int page, int size, long total
 	}
 
 	private static Item item(StatementLine line) {
-		return new Item(
-				line.id(),
-				line.cedenteId(),
-				line.cedenteNome(),
-				line.receivableId(),
-				line.paymentCurrency(),
-				money(line.faceValue()),
-				money(line.presentValueBrl()),
+		return new Item(line.id(), line.cedenteId(), line.cedenteNome(), line.receivableId(), line.paymentCurrency(),
+				money(line.faceValue()), money(line.presentValueBrl()),
 				line.fxRate() == null ? null : line.fxRate().stripTrailingZeros().toPlainString(),
-				money(line.netAmount()),
-				line.settledAt());
+				money(line.netAmount()), line.settledAt());
 	}
 
 	private static String money(BigDecimal value) {

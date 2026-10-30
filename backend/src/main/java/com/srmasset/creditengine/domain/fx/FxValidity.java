@@ -20,8 +20,7 @@ public final class FxValidity {
 	public FxSelection select(List<FxQuote> quotes, Instant at) {
 		Objects.requireNonNull(quotes, "quotes");
 		Objects.requireNonNull(at, "at");
-		FxQuote vigente = quotes.stream()
-				.filter(quote -> !quote.validFrom().toInstant().isAfter(at))
+		FxQuote vigente = quotes.stream().filter(quote -> !quote.validFrom().toInstant().isAfter(at))
 				.max(Comparator.comparing(quote -> quote.validFrom().toInstant()))
 				.orElseThrow(FxRateUnavailableException::new);
 		boolean stale = Duration.between(vigente.validFrom().toInstant(), at).compareTo(maxAge) > 0;

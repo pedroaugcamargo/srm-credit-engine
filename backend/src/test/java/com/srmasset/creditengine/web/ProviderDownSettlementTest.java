@@ -57,20 +57,16 @@ class ProviderDownSettlementTest {
 		assertEquals(0, new BigDecimal("5.4321").compareTo(seedRate()));
 
 		String receivableId = registerReceivable("2026-04-03");
-		mockMvc.perform(post("/api/v1/settlements")
-				.header("Idempotency-Key", UUID.randomUUID())
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("""
+		mockMvc.perform(post("/api/v1/settlements").header("Idempotency-Key", UUID.randomUUID())
+				.contentType(MediaType.APPLICATION_JSON).content("""
 						{
 						  "receivableId": "%s",
 						  "paymentCurrency": "USD"
 						}
-						""".formatted(receivableId)))
-				.andExpect(status().isUnprocessableContent())
+						""".formatted(receivableId))).andExpect(status().isUnprocessableContent())
 				.andExpect(jsonPath("$.code").value("FX_RATE_STALE"));
 
-		mockMvc.perform(get("/api/v1/receivables/" + receivableId))
-				.andExpect(jsonPath("$.status").value("OPEN"));
+		mockMvc.perform(get("/api/v1/receivables/" + receivableId)).andExpect(jsonPath("$.status").value("OPEN"));
 		assertEquals(0, new BigDecimal("5.4321").compareTo(seedRate()));
 	}
 
@@ -78,21 +74,16 @@ class ProviderDownSettlementTest {
 	void brlSettlementStillPricesWhenTheProviderIsDown() throws Exception {
 		String receivableId = registerReceivable("2026-04-03");
 
-		mockMvc.perform(post("/api/v1/settlements")
-				.header("Idempotency-Key", UUID.randomUUID())
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("""
+		mockMvc.perform(post("/api/v1/settlements").header("Idempotency-Key", UUID.randomUUID())
+				.contentType(MediaType.APPLICATION_JSON).content("""
 						{
 						  "receivableId": "%s",
 						  "paymentCurrency": "BRL"
 						}
-						""".formatted(receivableId)))
-				.andExpect(status().isCreated())
+						""".formatted(receivableId))).andExpect(status().isCreated())
 				.andExpect(jsonPath("$.paymentCurrency").value("BRL"))
-				.andExpect(jsonPath("$.faceValue").value("100000.00"))
-				.andExpect(jsonPath("$.termMonths").value("3"))
-				.andExpect(jsonPath("$.baseRate").value("0.01"))
-				.andExpect(jsonPath("$.spread").value("0.015"))
+				.andExpect(jsonPath("$.faceValue").value("100000.00")).andExpect(jsonPath("$.termMonths").value("3"))
+				.andExpect(jsonPath("$.baseRate").value("0.01")).andExpect(jsonPath("$.spread").value("0.015"))
 				.andExpect(jsonPath("$.presentValueBrl").value("92859.94"))
 				.andExpect(jsonPath("$.discountBrl").value("7140.06"))
 				.andExpect(jsonPath("$.fxRate").value(org.hamcrest.Matchers.nullValue()))
@@ -100,28 +91,22 @@ class ProviderDownSettlementTest {
 	}
 
 	private String registerReceivable(String dueDate) throws Exception {
-		String cedenteId = jdbc.queryForObject(
-				"select id::text from cedentes where documento = 'DOC-DEMO-001'",
+		String cedenteId = jdbc.queryForObject("select id::text from cedentes where documento = 'DOC-DEMO-001'",
 				String.class);
-		MvcResult created = mockMvc.perform(post("/api/v1/receivables")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("""
+		MvcResult created = mockMvc
+				.perform(post("/api/v1/receivables").contentType(MediaType.APPLICATION_JSON).content("""
 						{
 						  "cedenteId": "%s",
 						  "type": "DUPLICATA_MERCANTIL",
 						  "faceValue": "100000.00",
 						  "dueDate": "%s"
 						}
-						""".formatted(cedenteId, dueDate)))
-				.andExpect(status().isCreated())
-				.andReturn();
+						""".formatted(cedenteId, dueDate))).andExpect(status().isCreated()).andReturn();
 		return com.jayway.jsonpath.JsonPath.read(created.getResponse().getContentAsString(), "$.id");
 	}
 
 	private BigDecimal seedRate() {
-		return jdbc.queryForObject(
-				"select rate from fx_rates where source = 'SEED'",
-				BigDecimal.class);
+		return jdbc.queryForObject("select rate from fx_rates where source = 'SEED'", BigDecimal.class);
 	}
 
 	private int fxCount() {

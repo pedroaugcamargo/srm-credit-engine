@@ -24,20 +24,13 @@ public class SettlementStatementRepository {
 		this.jdbc = jdbc;
 	}
 
-	public StatementPage find(
-			OffsetDateTime from,
-			OffsetDateTime to,
-			UUID cedenteId,
-			PaymentCurrency currency,
-			int page,
-			int size) {
+	public StatementPage find(OffsetDateTime from, OffsetDateTime to, UUID cedenteId, PaymentCurrency currency,
+			int page, int size) {
 		StringBuilder where = new StringBuilder("""
 				 where s.settled_at >= :from
 				   and s.settled_at <= :to
 				""");
-		MapSqlParameterSource params = new MapSqlParameterSource()
-				.addValue("from", from)
-				.addValue("to", to);
+		MapSqlParameterSource params = new MapSqlParameterSource().addValue("from", from).addValue("to", to);
 		if (cedenteId != null) {
 			where.append(" and s.cedente_id = :cedenteId");
 			params.addValue("cedenteId", cedenteId);
@@ -47,10 +40,7 @@ public class SettlementStatementRepository {
 			params.addValue("currency", currency.name());
 		}
 
-		Long total = jdbc.queryForObject(
-				"select count(*) from settlements s" + where,
-				params,
-				Long.class);
+		Long total = jdbc.queryForObject("select count(*) from settlements s" + where, params, Long.class);
 		params.addValue("limit", size);
 		params.addValue("offset", page * size);
 		List<StatementLine> items = jdbc.query("""
@@ -61,17 +51,12 @@ public class SettlementStatementRepository {
 				""" + where + """
 				 order by s.settled_at desc, s.id desc
 				 limit :limit offset :offset
-				""", params, (rs, row) -> new StatementLine(
-				rs.getObject("id", UUID.class),
-				rs.getObject("cedente_id", UUID.class),
-				rs.getString("nome"),
-				rs.getObject("receivable_id", UUID.class),
-				PaymentCurrency.valueOf(rs.getString("payment_currency")),
-				rs.getBigDecimal("face_value"),
-				rs.getBigDecimal("present_value_brl"),
-				rs.getBigDecimal("fx_rate"),
-				rs.getBigDecimal("net_amount"),
-				settledAt(rs.getObject("settled_at", OffsetDateTime.class))));
+				""", params,
+				(rs, row) -> new StatementLine(rs.getObject("id", UUID.class), rs.getObject("cedente_id", UUID.class),
+						rs.getString("nome"), rs.getObject("receivable_id", UUID.class),
+						PaymentCurrency.valueOf(rs.getString("payment_currency")), rs.getBigDecimal("face_value"),
+						rs.getBigDecimal("present_value_brl"), rs.getBigDecimal("fx_rate"),
+						rs.getBigDecimal("net_amount"), settledAt(rs.getObject("settled_at", OffsetDateTime.class))));
 		return new StatementPage(items, page, size, total == null ? 0 : total);
 	}
 

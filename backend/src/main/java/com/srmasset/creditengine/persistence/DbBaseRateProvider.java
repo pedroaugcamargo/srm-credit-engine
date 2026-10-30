@@ -22,8 +22,7 @@ public final class DbBaseRateProvider {
 	public BigDecimal rateAt(Instant at) {
 		OffsetDateTime limit = OffsetDateTime.ofInstant(at, ZoneOffset.UTC);
 		return rates.findByValidFromLessThanEqual(limit).stream()
-				.max(Comparator.comparing(rate -> rate.getValidFrom().toInstant()))
-				.map(BaseRateEntity::getRate)
+				.max(Comparator.comparing(rate -> rate.getValidFrom().toInstant())).map(BaseRateEntity::getRate)
 				.orElseThrow(BaseRateUnavailableException::new);
 	}
 

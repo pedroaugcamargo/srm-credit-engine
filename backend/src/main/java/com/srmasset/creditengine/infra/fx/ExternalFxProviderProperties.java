@@ -10,10 +10,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 public final class ExternalFxProviderProperties {
 
 	public enum Failure {
-		NONE,
-		TIMEOUT,
-		SERVER_ERROR,
-		CLIENT_ERROR
+		NONE, TIMEOUT, SERVER_ERROR, CLIENT_ERROR
 	}
 
 	private final Duration delay;
@@ -29,19 +26,12 @@ public final class ExternalFxProviderProperties {
 	private final boolean refreshEnabled;
 	private final Duration refreshInterval;
 
-	public ExternalFxProviderProperties(
-			@DefaultValue("PT0S") Duration delay,
-			@DefaultValue("NONE") Failure failure,
-			@DefaultValue("5.4321") String rate,
-			@DefaultValue("2026-10-29T10:00:00-03:00") OffsetDateTime validFrom,
-			@DefaultValue("PT2S") Duration timeout,
-			@DefaultValue("2") int maxRetries,
-			@DefaultValue("PT0.2S") Duration retryInitialInterval,
-			@DefaultValue("10") int circuitWindowSize,
-			@DefaultValue("50") float circuitFailureRate,
-			@DefaultValue("PT30S") Duration circuitOpenWait,
-			@DefaultValue("false") boolean refreshEnabled,
-			@DefaultValue("PT1H") Duration refreshInterval) {
+	public ExternalFxProviderProperties(@DefaultValue("PT0S") Duration delay, @DefaultValue("NONE") Failure failure,
+			@DefaultValue("5.4321") String rate, @DefaultValue("2026-10-29T10:00:00-03:00") OffsetDateTime validFrom,
+			@DefaultValue("PT2S") Duration timeout, @DefaultValue("2") int maxRetries,
+			@DefaultValue("PT0.2S") Duration retryInitialInterval, @DefaultValue("10") int circuitWindowSize,
+			@DefaultValue("50") float circuitFailureRate, @DefaultValue("PT30S") Duration circuitOpenWait,
+			@DefaultValue("false") boolean refreshEnabled, @DefaultValue("PT1H") Duration refreshInterval) {
 		this.delay = delay;
 		this.failure = failure;
 		this.rate = rate;

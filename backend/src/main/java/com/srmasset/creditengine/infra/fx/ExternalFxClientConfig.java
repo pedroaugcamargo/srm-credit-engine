@@ -30,18 +30,12 @@ class ExternalFxClientConfig {
 	}
 
 	@Bean
-	ExternalFxClient externalFxClient(
-			ExternalFxProviderProperties properties,
-			ScheduledExecutorService externalFxScheduler,
-			CircuitBreakerRegistry externalFxCircuitBreakers,
+	ExternalFxClient externalFxClient(ExternalFxProviderProperties properties,
+			ScheduledExecutorService externalFxScheduler, CircuitBreakerRegistry externalFxCircuitBreakers,
 			MeterRegistry meterRegistry) {
 		TaggedCircuitBreakerMetrics.ofCircuitBreakerRegistry(externalFxCircuitBreakers).bindTo(meterRegistry);
-		return ResilientExternalFxClient.create(
-				new ConfigurableExternalFxClient(properties),
-				properties,
-				externalFxScheduler,
-				externalFxCircuitBreakers,
-				meterRegistry);
+		return ResilientExternalFxClient.create(new ConfigurableExternalFxClient(properties), properties,
+				externalFxScheduler, externalFxCircuitBreakers, meterRegistry);
 	}
 
 }

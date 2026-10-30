@@ -29,14 +29,9 @@ public class ReceivableController {
 
 	@PostMapping
 	public ResponseEntity<ReceivableResponse> register(@Valid @RequestBody ReceivableRequest request) {
-		Receivable receivable = receivables.register(
-				request.cedenteId(),
-				request.type(),
-				request.faceValue(),
+		Receivable receivable = receivables.register(request.cedenteId(), request.type(), request.faceValue(),
 				request.dueDate());
-		URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-				.path("/{id}")
-				.buildAndExpand(receivable.id())
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(receivable.id())
 				.toUri();
 		return ResponseEntity.created(location).body(ReceivableResponse.from(receivable));
 	}

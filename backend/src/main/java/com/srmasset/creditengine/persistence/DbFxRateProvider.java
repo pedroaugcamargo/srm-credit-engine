@@ -37,18 +37,12 @@ public final class DbFxRateProvider implements FxRateProvider {
 		OffsetDateTime limit = OffsetDateTime.ofInstant(at, ZoneOffset.UTC);
 		List<FxQuote> quotes = rates
 				.findByBaseCurrencyAndQuoteCurrencyAndValidFromLessThanEqual(baseCurrency, quoteCurrency, limit)
-				.stream()
-				.map(DbFxRateProvider::toQuote)
-				.toList();
+				.stream().map(DbFxRateProvider::toQuote).toList();
 		return validity.select(quotes, at);
 	}
 
 	private static FxQuote toQuote(FxRateEntity rate) {
-		return new FxQuote(
-				rate.getId(),
-				rate.getBaseCurrency(),
-				rate.getQuoteCurrency(),
-				rate.getRate(),
+		return new FxQuote(rate.getId(), rate.getBaseCurrency(), rate.getQuoteCurrency(), rate.getRate(),
 				rate.getValidFrom());
 	}
 

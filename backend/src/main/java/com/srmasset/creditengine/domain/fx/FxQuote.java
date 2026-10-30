@@ -4,10 +4,5 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
-public record FxQuote(
-		UUID id,
-		String baseCurrency,
-		String quoteCurrency,
-		BigDecimal rate,
-		OffsetDateTime validFrom) {
+public record FxQuote(UUID id, String baseCurrency, String quoteCurrency, BigDecimal rate, OffsetDateTime validFrom) {
 }

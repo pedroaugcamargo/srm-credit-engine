@@ -17,6 +17,11 @@ jobs:
           java-version: "21"
           cache: maven
           cache-dependency-path: backend/pom.xml
-      - name: Run Maven verify
+      - name: Show runner Docker
+        run: docker version
+      - name: Check formatting with Spotless
         working-directory: backend
-        run: chmod +x mvnw && ./mvnw verify
+        run: chmod +x mvnw && ./mvnw -B spotless:check
+      - name: Verify with Testcontainers
+        working-directory: backend
+        run: ./mvnw -B verify

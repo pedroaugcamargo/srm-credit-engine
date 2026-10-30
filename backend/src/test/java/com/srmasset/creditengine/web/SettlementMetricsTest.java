@@ -79,10 +79,14 @@ class SettlementMetricsTest {
 		assertEquals(providerCalls + 1, providerCalls("success"));
 
 		String scrape = prometheus();
-		assertEquals(settlements("BRL", "created"), sample(scrape, "settlements_total", "currency=\"BRL\"", "result=\"created\""));
-		assertEquals(settlements("BRL", "replayed"), sample(scrape, "settlements_total", "currency=\"BRL\"", "result=\"replayed\""));
-		assertEquals(settlements("USD", "rejected"), sample(scrape, "settlements_total", "currency=\"USD\"", "result=\"rejected\""));
-		assertEquals(settlements("BRL", "conflict"), sample(scrape, "settlements_total", "currency=\"BRL\"", "result=\"conflict\""));
+		assertEquals(settlements("BRL", "created"),
+				sample(scrape, "settlements_total", "currency=\"BRL\"", "result=\"created\""));
+		assertEquals(settlements("BRL", "replayed"),
+				sample(scrape, "settlements_total", "currency=\"BRL\"", "result=\"replayed\""));
+		assertEquals(settlements("USD", "rejected"),
+				sample(scrape, "settlements_total", "currency=\"USD\"", "result=\"rejected\""));
+		assertEquals(settlements("BRL", "conflict"),
+				sample(scrape, "settlements_total", "currency=\"BRL\"", "result=\"conflict\""));
 		assertEquals(providerCalls("success"), sample(scrape, "fx_provider_calls_total", "outcome=\"success\""));
 		assertEquals(1, sample(scrape, "resilience4j_circuitbreaker_state", "name=\"externalFx\"", "state=\"closed\""));
 		assertTrue(scrape.contains("pricing_engine_duration_seconds"));
@@ -107,38 +111,29 @@ class SettlementMetricsTest {
 	}
 
 	private String prometheus() throws Exception {
-		return mockMvc.perform(get("/actuator/prometheus"))
-				.andExpect(status().isOk())
-				.andReturn()
-				.getResponse()
+		return mockMvc.perform(get("/actuator/prometheus")).andExpect(status().isOk()).andReturn().getResponse()
 				.getContentAsString();
 	}
 
 	private String registerReceivable() throws Exception {
-		String cedenteId = jdbc.queryForObject(
-				"select id::text from cedentes where documento = ?",
-				String.class,
+		String cedenteId = jdbc.queryForObject("select id::text from cedentes where documento = ?", String.class,
 				"DOC-DEMO-001");
-		MvcResult created = mockMvc.perform(post("/api/v1/receivables")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("""
+		MvcResult created = mockMvc
+				.perform(post("/api/v1/receivables").contentType(MediaType.APPLICATION_JSON).content("""
 						{
 						  "cedenteId": "%s",
 						  "type": "DUPLICATA_MERCANTIL",
 						  "faceValue": "100000.00",
 						  "dueDate": "%s"
 						}
-						""".formatted(cedenteId, DUE_DATE)))
-				.andExpect(status().isCreated())
-				.andReturn();
+						""".formatted(cedenteId, DUE_DATE))).andExpect(status().isCreated()).andReturn();
 		return com.jayway.jsonpath.JsonPath.read(created.getResponse().getContentAsString(), "$.id");
 	}
 
-	private org.springframework.test.web.servlet.ResultActions settle(String receivableId, String currency, UUID key) throws Exception {
-		return mockMvc.perform(post("/api/v1/settlements")
-				.header("Idempotency-Key", key)
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("""
+	private org.springframework.test.web.servlet.ResultActions settle(String receivableId, String currency, UUID key)
+			throws Exception {
+		return mockMvc.perform(post("/api/v1/settlements").header("Idempotency-Key", key)
+				.contentType(MediaType.APPLICATION_JSON).content("""
 						{
 						  "receivableId": "%s",
 						  "paymentCurrency": "%s"

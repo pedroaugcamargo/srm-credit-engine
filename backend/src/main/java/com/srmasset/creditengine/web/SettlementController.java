@@ -36,13 +36,9 @@ public class SettlementController {
 	}
 
 	@GetMapping
-	public StatementResponse statement(
-			@RequestParam OffsetDateTime from,
-			@RequestParam OffsetDateTime to,
-			@RequestParam(required = false) UUID cedenteId,
-			@RequestParam(required = false) PaymentCurrency currency,
-			@RequestParam(defaultValue = "0") int page,
-			@RequestParam(defaultValue = "20") int size) {
+	public StatementResponse statement(@RequestParam OffsetDateTime from, @RequestParam OffsetDateTime to,
+			@RequestParam(required = false) UUID cedenteId, @RequestParam(required = false) PaymentCurrency currency,
+			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
 		return StatementResponse.from(statement.statement(from, to, cedenteId, currency, page, size));
 	}
 
@@ -50,18 +46,14 @@ public class SettlementController {
 	public ResponseEntity<SettlementResponse> settle(
 			@RequestHeader(value = "Idempotency-Key", required = false) String idempotencyKey,
 			@Valid @RequestBody SettlementRequest request) {
-		SettlementResult result = settlements.settle(
-				requireKey(idempotencyKey),
-				request.receivableId(),
+		SettlementResult result = settlements.settle(requireKey(idempotencyKey), request.receivableId(),
 				request.paymentCurrency());
 		SettlementResponse body = SettlementResponse.from(result.snapshot());
 		if (result.replayed()) {
 			return ResponseEntity.ok().header("Idempotent-Replayed", "true").body(body);
 		}
-		URI location = ServletUriComponentsBuilder.fromCurrentRequest()
-				.path("/{id}")
-				.buildAndExpand(result.snapshot().id())
-				.toUri();
+		URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+				.buildAndExpand(result.snapshot().id()).toUri();
 		return ResponseEntity.created(location).body(body);
 	}
 

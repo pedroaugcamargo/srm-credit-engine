@@ -43,7 +43,8 @@ public class FxRateService {
 		entity.setSource(source);
 		entity.setCreatedAt(OffsetDateTime.now(clock));
 		FxRateEntity saved = rates.saveAndFlush(entity);
-		return new FxQuote(saved.getId(), saved.getBaseCurrency(), saved.getQuoteCurrency(), saved.getRate(), saved.getValidFrom());
+		return new FxQuote(saved.getId(), saved.getBaseCurrency(), saved.getQuoteCurrency(), saved.getRate(),
+				saved.getValidFrom());
 	}
 
 	@Transactional(readOnly = true)

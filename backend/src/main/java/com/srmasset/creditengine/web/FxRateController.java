@@ -29,7 +29,8 @@ public class FxRateController {
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public RegisteredFxRateResponse register(@Valid @RequestBody FxRateRequest request) {
-		return RegisteredFxRateResponse.from(rates.register(request.base(), request.quote(), request.rate(), request.validFrom()));
+		return RegisteredFxRateResponse
+				.from(rates.register(request.base(), request.quote(), request.rate(), request.validFrom()));
 	}
 
 	@PostMapping("/refresh")

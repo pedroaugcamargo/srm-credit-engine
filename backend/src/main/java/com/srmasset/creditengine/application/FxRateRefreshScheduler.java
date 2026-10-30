@@ -24,8 +24,8 @@ public class FxRateRefreshScheduler implements SchedulingConfigurer {
 
 	@Override
 	public void configureTasks(ScheduledTaskRegistrar registrar) {
-		registrar.addFixedDelayTask(new IntervalTask(
-				refresh::refresh, properties.refreshInterval(), properties.refreshInterval()));
+		registrar.addFixedDelayTask(
+				new IntervalTask(refresh::refresh, properties.refreshInterval(), properties.refreshInterval()));
 	}
 
 }

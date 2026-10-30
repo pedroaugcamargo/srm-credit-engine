@@ -71,12 +71,7 @@ class FxValidityTest {
 	}
 
 	private static FxQuote quote(String rate, String validFrom) {
-		return new FxQuote(
-				UUID.randomUUID(),
-				"USD",
-				"BRL",
-				new BigDecimal(rate),
-				OffsetDateTime.parse(validFrom));
+		return new FxQuote(UUID.randomUUID(), "USD", "BRL", new BigDecimal(rate), OffsetDateTime.parse(validFrom));
 	}
 
 }

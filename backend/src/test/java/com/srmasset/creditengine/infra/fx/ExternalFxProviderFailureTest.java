@@ -48,10 +48,7 @@ class ExternalFxProviderFailureTest {
 	private BigDecimal seedRate() {
 		return jdbc.queryForObject(
 				"select rate from fx_rates where source = ? and base_currency = ? and quote_currency = ?",
-				BigDecimal.class,
-				"SEED",
-				"USD",
-				"BRL");
+				BigDecimal.class, "SEED", "USD", "BRL");
 	}
 
 }

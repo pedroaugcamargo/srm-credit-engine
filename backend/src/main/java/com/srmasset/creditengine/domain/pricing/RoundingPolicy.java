@@ -13,9 +13,7 @@ public final class RoundingPolicy {
 	private final int scale;
 	private final RoundingMode mode;
 
-	public RoundingPolicy(
-			@DefaultValue("2") int scale,
-			@DefaultValue("HALF_EVEN") RoundingMode mode) {
+	public RoundingPolicy(@DefaultValue("2") int scale, @DefaultValue("HALF_EVEN") RoundingMode mode) {
 		this.scale = scale;
 		this.mode = Objects.requireNonNull(mode, "mode");
 	}

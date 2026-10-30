@@ -14,7 +14,8 @@ import org.testcontainers.utility.DockerImageName;
 public final class PostgresContextCustomizerFactory implements ContextCustomizerFactory {
 
 	@Override
-	public ContextCustomizer createContextCustomizer(Class<?> testClass, List<ContextConfigurationAttributes> configAttributes) {
+	public ContextCustomizer createContextCustomizer(Class<?> testClass,
+			List<ContextConfigurationAttributes> configAttributes) {
 		return new PostgresContextCustomizer();
 	}
 
@@ -30,11 +31,9 @@ public final class PostgresContextCustomizerFactory implements ContextCustomizer
 
 		@Override
 		public void customizeContext(ConfigurableApplicationContext context, MergedContextConfiguration mergedConfig) {
-			TestPropertyValues.of(
-					"spring.datasource.url=" + POSTGRES.getJdbcUrl(),
+			TestPropertyValues.of("spring.datasource.url=" + POSTGRES.getJdbcUrl(),
 					"spring.datasource.username=" + POSTGRES.getUsername(),
-					"spring.datasource.password=" + POSTGRES.getPassword())
-					.applyTo(context.getEnvironment());
+					"spring.datasource.password=" + POSTGRES.getPassword()).applyTo(context.getEnvironment());
 		}
 
 		@Override

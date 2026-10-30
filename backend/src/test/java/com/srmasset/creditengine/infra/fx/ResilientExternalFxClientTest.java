@@ -25,10 +25,7 @@ class ResilientExternalFxClientTest {
 
 	private static final OffsetDateTime VALID_FROM = OffsetDateTime.parse("2026-10-29T10:00:00-03:00");
 
-	private static final ExternalFxQuote RECOVERED = new ExternalFxQuote(
-			"USD",
-			"BRL",
-			new BigDecimal("5.6000"),
+	private static final ExternalFxQuote RECOVERED = new ExternalFxQuote("USD", "BRL", new BigDecimal("5.6000"),
 			VALID_FROM);
 
 	private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(4);
@@ -118,26 +115,14 @@ class ResilientExternalFxClientTest {
 		assertEquals(VALID_FROM, quote.validFrom());
 	}
 
-	private ResilientExternalFxClient client(
-			com.srmasset.creditengine.domain.fx.ExternalFxClient delegate,
-			Duration timeout,
-			int maxRetries) {
+	private ResilientExternalFxClient client(com.srmasset.creditengine.domain.fx.ExternalFxClient delegate,
+			Duration timeout, int maxRetries) {
 		return ResilientExternalFxClient.create(delegate, properties(timeout, maxRetries), scheduler);
 	}
 
 	private static ExternalFxProviderProperties properties(Duration timeout, int maxRetries) {
-		return new ExternalFxProviderProperties(
-				Duration.ZERO,
-				ExternalFxProviderProperties.Failure.NONE,
-				"5.4321",
-				VALID_FROM,
-				timeout,
-				maxRetries,
-				Duration.ofMillis(1),
-				10,
-				50f,
-				Duration.ofSeconds(30),
-				false,
+		return new ExternalFxProviderProperties(Duration.ZERO, ExternalFxProviderProperties.Failure.NONE, "5.4321",
+				VALID_FROM, timeout, maxRetries, Duration.ofMillis(1), 10, 50f, Duration.ofSeconds(30), false,
 				Duration.ofHours(1));
 	}
 

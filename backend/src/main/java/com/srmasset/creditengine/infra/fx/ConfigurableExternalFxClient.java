@@ -27,11 +27,8 @@ public final class ConfigurableExternalFxClient implements ExternalFxClient {
 		return switch (properties.failure()) {
 			case SERVER_ERROR -> throw new ExternalFxServerException();
 			case CLIENT_ERROR -> throw new ExternalFxClientException();
-			case NONE, TIMEOUT -> new ExternalFxQuote(
-					base,
-					quote,
-					new BigDecimal(properties.rate()),
-					properties.validFrom());
+			case NONE, TIMEOUT ->
+				new ExternalFxQuote(base, quote, new BigDecimal(properties.rate()), properties.validFrom());
 		};
 	}
 

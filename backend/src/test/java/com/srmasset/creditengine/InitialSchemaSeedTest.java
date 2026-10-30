@@ -33,8 +33,7 @@ class InitialSchemaSeedTest {
 	}
 
 	private List<String> idVersions() {
-		return jdbc.queryForList(
-				"select substring(id::text from 15 for 1) from cedentes order by documento",
+		return jdbc.queryForList("select substring(id::text from 15 for 1) from cedentes order by documento",
 				String.class);
 	}
 
@@ -65,11 +64,8 @@ class InitialSchemaSeedTest {
 	}
 
 	private BigDecimal fxRate() {
-		return jdbc.queryForObject(
-				"select rate from fx_rates where base_currency = ? and quote_currency = ?",
-				BigDecimal.class,
-				"USD",
-				"BRL");
+		return jdbc.queryForObject("select rate from fx_rates where base_currency = ? and quote_currency = ?",
+				BigDecimal.class, "USD", "BRL");
 	}
 
 	private String fxBaseCurrency() {

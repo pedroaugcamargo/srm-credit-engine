@@ -58,22 +58,16 @@ public class PricingSimulationController {
 	}
 
 	@PostMapping
-	@Operation(
-			summary = "Simula o valor líquido de um recebível",
-			requestBody = @RequestBody(content = @Content(examples = @ExampleObject(name = "duplicataUsd", value = REQUEST_EXAMPLE))),
-			responses = {
-					@ApiResponse(responseCode = "200", content = @Content(examples = @ExampleObject(name = "duplicataUsd", value = RESPONSE_EXAMPLE))),
-					@ApiResponse(responseCode = "400", description = "VALIDATION_ERROR"),
-					@ApiResponse(responseCode = "422", description = "INVALID_TERM")
-			})
-	public SimulationResponse simulate(@Valid @org.springframework.web.bind.annotation.RequestBody SimulationRequest request) {
+	@Operation(summary = "Simula o valor líquido de um recebível", requestBody = @RequestBody(content = @Content(examples = @ExampleObject(name = "duplicataUsd", value = REQUEST_EXAMPLE))), responses = {
+			@ApiResponse(responseCode = "200", content = @Content(examples = @ExampleObject(name = "duplicataUsd", value = RESPONSE_EXAMPLE))),
+			@ApiResponse(responseCode = "400", description = "VALIDATION_ERROR"),
+			@ApiResponse(responseCode = "422", description = "INVALID_TERM")})
+	public SimulationResponse simulate(
+			@Valid @org.springframework.web.bind.annotation.RequestBody SimulationRequest request) {
 		LocalDate operationDate = LocalDate.now(clock);
 		BigDecimal termMonths = termCalculator.termMonths(operationDate, request.dueDate());
-		PricingResult result = engine.price(new PricingInput(
-				new BigDecimal(request.faceValue()),
-				request.receivableType(),
-				termMonths,
-				request.paymentCurrency()));
+		PricingResult result = engine.price(new PricingInput(new BigDecimal(request.faceValue()),
+				request.receivableType(), termMonths, request.paymentCurrency()));
 		return SimulationResponse.from(result);
 	}
 

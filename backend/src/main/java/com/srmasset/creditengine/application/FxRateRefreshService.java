@@ -21,11 +21,7 @@ public class FxRateRefreshService {
 
 	public FxQuote refresh() {
 		ExternalFxQuote quote = client.fetch("USD", "BRL");
-		return rates.register(
-				quote.base(),
-				quote.quote(),
-				quote.rate().toPlainString(),
-				quote.validFrom(),
+		return rates.register(quote.base(), quote.quote(), quote.rate().toPlainString(), quote.validFrom(),
 				EXTERNAL_SOURCE);
 	}
 

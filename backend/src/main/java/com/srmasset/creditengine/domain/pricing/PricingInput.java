@@ -3,10 +3,7 @@ package com.srmasset.creditengine.domain.pricing;
 import java.math.BigDecimal;
 import java.util.Objects;
 
-public record PricingInput(
-		BigDecimal faceValue,
-		ReceivableType receivableType,
-		BigDecimal termMonths,
+public record PricingInput(BigDecimal faceValue, ReceivableType receivableType, BigDecimal termMonths,
 		PaymentCurrency paymentCurrency) {
 
 	public PricingInput {
