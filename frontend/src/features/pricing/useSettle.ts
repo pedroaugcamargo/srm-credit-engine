@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRef } from 'react'
 import { registerReceivable, settleReceivable } from '../../api/client'
 import { retryOnlyTransient } from '../../api/problem'
@@ -46,6 +46,7 @@ function sameInput(a: SettleInput | undefined, b: SettleInput | null): boolean {
  * devolve a liquidação original (`Idempotent-Replayed`) em vez de pagar outra.
  */
 export function useSettle(input: SettleInput | null) {
+  const queryClient = useQueryClient()
   // Atualizado no clique, antes do re-render: barra o segundo clique do duplo.
   const inFlight = useRef(false)
   // Recebível registrado por chave de idempotência.
@@ -70,6 +71,11 @@ export function useSettle(input: SettleInput | null) {
       )
     },
     retry: retryOnlyTransient,
+    // A liquidação nova precisa aparecer no histórico. Sem await: a
+    // confirmação não espera o extrato recarregar.
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['statement'] })
+    },
     onSettled: () => {
       inFlight.current = false
     },

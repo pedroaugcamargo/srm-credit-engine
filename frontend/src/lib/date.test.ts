@@ -37,4 +37,10 @@ describe('datas no fuso de São Paulo', () => {
   it('formata o instante da liquidação no horário de Brasília', () => {
     expect(formatDateTime('2026-10-29T17:03:11Z')).toBe('29/10/2026, 14:03')
   })
+
+  it('aceita a fração em nanossegundos que o backend envia', () => {
+    expect(formatDateTime('2026-10-30T04:33:56.106621207-03:00')).toBe(
+      '30/10/2026, 04:33',
+    )
+  })
 })

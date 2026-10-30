@@ -65,10 +65,11 @@ function renderSettle(initial: SettleInput | null = input) {
   const wrapper = ({ children }: { children: ReactNode }) => (
     <QueryClientProvider client={client}>{children}</QueryClientProvider>
   )
-  return renderHook(({ current }) => useSettle(current), {
+  const rendered = renderHook(({ current }) => useSettle(current), {
     wrapper,
     initialProps: { current: initial },
   })
+  return { ...rendered, client }
 }
 
 async function advance(ms: number) {
@@ -241,6 +242,37 @@ describe('useSettle', () => {
     expect(settleMock.mock.calls[1][1]).toBe(
       '00000000-0000-4000-8000-000000000002',
     )
+  })
+
+  it('depois de liquidar, marca o extrato para recarregar', async () => {
+    settleMock.mockImplementation(async (_, key) => ({
+      settlement: settlement(key),
+      replayed: false,
+    }))
+    const { result, client } = renderSettle()
+    client.setQueryData(['statement', { page: 0 }], { items: [] })
+
+    act(() => result.current.settle())
+    await advance(0)
+
+    expect(
+      client.getQueryState(['statement', { page: 0 }])?.isInvalidated,
+    ).toBe(true)
+  })
+
+  it('erro na liquidação não mexe no extrato', async () => {
+    settleMock.mockRejectedValue(
+      new ApiError(409, 'Recebível já liquidado.', 'RECEIVABLE_ALREADY_SETTLED'),
+    )
+    const { result, client } = renderSettle()
+    client.setQueryData(['statement', { page: 0 }], { items: [] })
+
+    act(() => result.current.settle())
+    await advance(0)
+
+    expect(
+      client.getQueryState(['statement', { page: 0 }])?.isInvalidated,
+    ).toBe(false)
   })
 
   it('não liquida sem dados completos', () => {

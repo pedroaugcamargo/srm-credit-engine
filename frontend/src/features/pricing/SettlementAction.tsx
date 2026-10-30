@@ -1,6 +1,7 @@
 import type { SettlementResponse } from '../../api/types'
 import { ErrorMessage } from '../../components/ErrorMessage'
 import { Money } from '../../components/Money'
+import { formatDateTime } from '../../lib/date'
 
 interface SettlementActionProps {
   canSettle: boolean
@@ -45,7 +46,7 @@ export function SettlementAction({
             <dt>Liquidação</dt>
             <dd>{settlement.id}</dd>
             <dt>Data</dt>
-            <dd>{settlement.settledAt}</dd>
+            <dd>{formatDateTime(settlement.settledAt)}</dd>
           </dl>
         </div>
       )}
