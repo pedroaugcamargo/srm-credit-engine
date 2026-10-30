@@ -10,7 +10,38 @@ Plataforma de cessão de crédito multimoedas (BRL/USD): precificação de receb
 
 ## Como rodar
 
-Em construção (entrega 001).
+É preciso ter o Docker. Na raiz do repositório:
+
+```bash
+docker compose up --build
+```
+
+Sobe o Postgres e o backend.
+
+| O quê | Endereço |
+|---|---|
+| API | http://localhost:8080 |
+| Documentação da API | http://localhost:8080/swagger-ui.html |
+| OpenAPI | http://localhost:8080/v3/api-docs |
+
+### Grafana
+
+A observabilidade entra na rede `credit_engine`, que o compose da aplicação cria. Suba a aplicação antes.
+
+```bash
+docker compose -f docker-compose.observability.yml up
+```
+
+O Grafana abre sem senha.
+
+| O quê | Endereço |
+|---|---|
+| Grafana | http://localhost:3000 |
+| Dashboard | http://localhost:3000/d/credit-engine-operacao |
+
+### Frontend
+
+O painel do operador é a entrega 004 e ainda não está neste repositório. Não há endereço para abrir.
 
 ## Fluxo de Git
 

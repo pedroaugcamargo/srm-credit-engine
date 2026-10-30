@@ -12,6 +12,8 @@ services:
       interval: 5s
       timeout: 5s
       retries: 10
+    networks:
+      - credit_engine
   backend:
     build: ./backend
     ports:
@@ -23,3 +25,9 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      - credit_engine
+
+networks:
+  credit_engine:
+    name: credit_engine
