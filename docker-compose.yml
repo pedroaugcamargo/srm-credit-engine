@@ -27,6 +27,14 @@ services:
         condition: service_healthy
     networks:
       - credit_engine
+  frontend:
+    build: ./frontend
+    ports:
+      - "4173:8080"
+    depends_on:
+      - backend
+    networks:
+      - credit_engine
 
 networks:
   credit_engine:
