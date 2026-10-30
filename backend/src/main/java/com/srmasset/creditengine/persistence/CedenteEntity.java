@@ -24,4 +24,8 @@ public class CedenteEntity {
 		return id;
 	}
 
+	public String getNome() {
+		return nome;
+	}
+
 }
