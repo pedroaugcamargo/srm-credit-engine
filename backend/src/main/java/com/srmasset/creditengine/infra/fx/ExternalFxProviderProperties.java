@@ -26,6 +26,8 @@ public final class ExternalFxProviderProperties {
 	private final int circuitWindowSize;
 	private final float circuitFailureRate;
 	private final Duration circuitOpenWait;
+	private final boolean refreshEnabled;
+	private final Duration refreshInterval;
 
 	public ExternalFxProviderProperties(
 			@DefaultValue("PT0S") Duration delay,
@@ -37,7 +39,9 @@ public final class ExternalFxProviderProperties {
 			@DefaultValue("PT0.2S") Duration retryInitialInterval,
 			@DefaultValue("10") int circuitWindowSize,
 			@DefaultValue("50") float circuitFailureRate,
-			@DefaultValue("PT30S") Duration circuitOpenWait) {
+			@DefaultValue("PT30S") Duration circuitOpenWait,
+			@DefaultValue("false") boolean refreshEnabled,
+			@DefaultValue("PT1H") Duration refreshInterval) {
 		this.delay = delay;
 		this.failure = failure;
 		this.rate = rate;
@@ -48,6 +52,8 @@ public final class ExternalFxProviderProperties {
 		this.circuitWindowSize = circuitWindowSize;
 		this.circuitFailureRate = circuitFailureRate;
 		this.circuitOpenWait = circuitOpenWait;
+		this.refreshEnabled = refreshEnabled;
+		this.refreshInterval = refreshInterval;
 	}
 
 	public Duration delay() {
@@ -88,6 +94,14 @@ public final class ExternalFxProviderProperties {
 
 	public Duration circuitOpenWait() {
 		return circuitOpenWait;
+	}
+
+	public boolean refreshEnabled() {
+		return refreshEnabled;
+	}
+
+	public Duration refreshInterval() {
+		return refreshInterval;
 	}
 
 }

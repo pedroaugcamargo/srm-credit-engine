@@ -136,7 +136,9 @@ class ResilientExternalFxClientTest {
 				Duration.ofMillis(1),
 				10,
 				50f,
-				Duration.ofSeconds(30));
+				Duration.ofSeconds(30),
+				false,
+				Duration.ofHours(1));
 	}
 
 	private static void sleepUntilInterrupted() {

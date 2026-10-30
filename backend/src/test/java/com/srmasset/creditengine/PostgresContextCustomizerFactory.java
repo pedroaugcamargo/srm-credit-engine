@@ -24,6 +24,7 @@ public final class PostgresContextCustomizerFactory implements ContextCustomizer
 				DockerImageName.parse("postgres:18-alpine"));
 
 		static {
+			POSTGRES.setCommand("postgres", "-c", "max_connections=300");
 			POSTGRES.start();
 		}
 

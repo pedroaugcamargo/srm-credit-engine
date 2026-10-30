@@ -30,12 +30,17 @@ public class FxRateService {
 
 	@Transactional
 	public FxQuote register(String base, String quote, String rate, OffsetDateTime validFrom) {
+		return register(base, quote, rate, validFrom, MANUAL_SOURCE);
+	}
+
+	@Transactional
+	public FxQuote register(String base, String quote, String rate, OffsetDateTime validFrom, String source) {
 		FxRateEntity entity = new FxRateEntity();
 		entity.setBaseCurrency(base);
 		entity.setQuoteCurrency(quote);
 		entity.setRate(new BigDecimal(rate));
 		entity.setValidFrom(validFrom);
-		entity.setSource(MANUAL_SOURCE);
+		entity.setSource(source);
 		entity.setCreatedAt(OffsetDateTime.now(clock));
 		FxRateEntity saved = rates.saveAndFlush(entity);
 		return new FxQuote(saved.getId(), saved.getBaseCurrency(), saved.getQuoteCurrency(), saved.getRate(), saved.getValidFrom());
