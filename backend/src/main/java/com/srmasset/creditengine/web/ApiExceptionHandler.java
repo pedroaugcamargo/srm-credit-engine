@@ -7,6 +7,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.srmasset.creditengine.domain.fx.FxRateUnavailableException;
 import com.srmasset.creditengine.domain.pricing.InvalidTermException;
 
 @RestControllerAdvice
@@ -18,6 +19,15 @@ public class ApiExceptionHandler {
 				HttpStatus.UNPROCESSABLE_CONTENT,
 				"O vencimento precisa ser posterior à data da operação.");
 		problem.setProperty("code", "INVALID_TERM");
+		return problem;
+	}
+
+	@ExceptionHandler(FxRateUnavailableException.class)
+	ProblemDetail fxRateUnavailable(FxRateUnavailableException exception) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+				HttpStatus.UNPROCESSABLE_CONTENT,
+				exception.getMessage());
+		problem.setProperty("code", "FX_RATE_UNAVAILABLE");
 		return problem;
 	}
 

@@ -8,10 +8,11 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 
+import com.srmasset.creditengine.domain.fx.FxProperties;
 import com.srmasset.creditengine.domain.pricing.RoundingPolicy;
 
 @SpringBootApplication
-@EnableConfigurationProperties(RoundingPolicy.class)
+@EnableConfigurationProperties({ RoundingPolicy.class, FxProperties.class })
 public class CreditEngineApplication {
 
 	public static void main(String[] args) {
