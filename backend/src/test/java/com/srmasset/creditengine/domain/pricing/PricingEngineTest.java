@@ -7,6 +7,7 @@ import java.math.RoundingMode;
 import java.util.List;
 import java.util.stream.Stream;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -28,6 +29,15 @@ class PricingEngineTest {
 		PricingResult actual = engine.price(input);
 
 		assertEquals(expected, actual);
+		assertEquals(0, actual.faceValue().compareTo(actual.presentValueBrl().add(actual.discountBrl())));
+	}
+
+	@Test
+	void pricesFractionalTermWithBigMath() {
+		PricingResult actual = engine.price(
+				input("100000.00", ReceivableType.DUPLICATA_MERCANTIL, "1.5", PaymentCurrency.BRL));
+
+		assertEquals(result("100000.00", "1.5", "0.01", "0.015", "96363.86", "3636.14", PaymentCurrency.BRL, null, "96363.86"), actual);
 		assertEquals(0, actual.faceValue().compareTo(actual.presentValueBrl().add(actual.discountBrl())));
 	}
 
