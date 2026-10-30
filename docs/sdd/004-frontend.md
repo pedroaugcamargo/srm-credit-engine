@@ -51,9 +51,9 @@ Regra de separação: componentes só renderizam; regra, chamadas e estado ficam
 
 ## Definition of done
 
-- [ ] Nenhum `parseFloat`, `Number(` ou aritmética em valores monetários no código do front.
-- [ ] Duplo clique em "Liquidar" gera uma única liquidação (verificado no extrato).
-- [ ] O projeto inteiro sobe com um comando a partir de um clone limpo.
+- [x] Nenhum `parseFloat`, `Number(` ou aritmética em valores monetários no código do front.
+- [x] Duplo clique em "Liquidar" gera uma única liquidação (verificado no extrato).
+- [x] O projeto inteiro sobe com um comando a partir de um clone limpo.
 
 ## Instruções para o agente de IA
 

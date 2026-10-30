@@ -39,14 +39,17 @@ Integração externa de câmbio com resiliência, logs estruturados, métricas e
 ## Contratos
 
 ### Currency Engine
+
 - `POST /api/v1/fx-rates` com `{ "base": "USD", "quote": "BRL", "rate": "5.4321", "validFrom": "2026-10-29T10:00:00-03:00" }` responde `201`.
 - `GET /api/v1/fx-rates/current?base=USD&quote=BRL` responde `200` com a taxa vigente e o campo `stale: true|false`.
 
 ### Recebíveis
+
 - `POST /api/v1/receivables` com `{ "cedenteId", "type", "faceValue", "dueDate" }` responde `201` com `Location`.
 - `GET /api/v1/receivables/{id}` responde `200` ou `404`.
 
 ### Liquidação
+
 `POST /api/v1/settlements`, header obrigatório `Idempotency-Key: <uuid>`, corpo `{ "receivableId": "...", "paymentCurrency": "USD" }`.
 
 | Situação | Resposta |
@@ -99,11 +102,11 @@ Entidades JPA usam `@Column(precision = 19, scale = 2)` em dinheiro e nunca tipo
 
 ## Definition of done
 
-- [ ] Golden cases da 001 continuam verdes.
-- [ ] Testes de concorrência e imutabilidade verdes contra Postgres real.
-- [ ] Nenhuma query concatenada com input.
-- [ ] `docker compose up --build` sobe banco e backend sem passo manual.
-- [ ] PR explica as três barreiras contra liquidação dupla e por que cada uma existe.
+- [x] Golden cases da 001 continuam verdes.
+- [x] Testes de concorrência e imutabilidade verdes contra Postgres real.
+- [x] Nenhuma query concatenada com input.
+- [x] `docker compose up --build` sobe banco e backend sem passo manual.
+- [x] PR explica as três barreiras contra liquidação dupla e por que cada uma existe.
 
 ## Instruções para o agente de IA
 
