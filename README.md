@@ -16,10 +16,11 @@ Plataforma de cessão de crédito multimoedas (BRL/USD): precificação de receb
 docker compose up --build
 ```
 
-Ao rodar o comando acima, sobe o postgres e o backend.
+Ao rodar o comando acima, sobem o postgres, o backend e o frontend.
 
 | O quê | Endereço |
 |---|---|
+| Painel do operador | http://localhost:4173 |
 | API | http://localhost:8080 |
 | Documentação da API | http://localhost:8080/swagger-ui.html |
 | OpenAPI | http://localhost:8080/v3/api-docs |
@@ -41,7 +42,21 @@ O Grafana abre sem senha.
 
 ### Frontend
 
-O painel do operador é a entrega 004 e ainda não está neste repositório. Não há endereço para abrir.
+No compose, o Nginx serve o build e faz proxy de `/api` para o backend na mesma origem, sem CORS.
+
+Para desenvolver com recarga automática, suba só o postgres e o backend pelo compose e rode o Vite, que faz o mesmo proxy. O Vite usa a mesma porta do painel no compose, então o serviço `frontend` não pode estar rodando:
+
+```bash
+docker compose up -d postgres backend
+```
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+O painel abre em http://localhost:4173.
 
 ## Desempenho do extrato
 
