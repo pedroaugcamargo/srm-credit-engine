@@ -7,13 +7,13 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.when;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.QueryTimeoutException;
-import org.springframework.jdbc.core.PreparedStatementCallback;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 
@@ -27,7 +27,7 @@ class SettlementStatementRepositoryTest {
 
 	@Test
 	void countTimeoutBecomesStatementQueryTimeout() {
-		when(jdbc.execute(anyString(), any(SqlParameterSource.class), any(PreparedStatementCallback.class)))
+		when(jdbc.<List<Long>>execute(anyString(), any(SqlParameterSource.class), any()))
 				.thenThrow(new QueryTimeoutException("canceling statement due to user request"));
 		SettlementStatementRepository statements = new SettlementStatementRepository(jdbc);
 
