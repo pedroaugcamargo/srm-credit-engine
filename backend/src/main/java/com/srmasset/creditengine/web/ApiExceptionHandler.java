@@ -7,6 +7,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.srmasset.creditengine.application.CedenteNotFoundException;
+import com.srmasset.creditengine.application.ReceivableNotFoundException;
 import com.srmasset.creditengine.domain.fx.FxRateUnavailableException;
 import com.srmasset.creditengine.domain.pricing.InvalidTermException;
 
@@ -19,6 +21,20 @@ public class ApiExceptionHandler {
 				HttpStatus.UNPROCESSABLE_CONTENT,
 				"O vencimento precisa ser posterior à data da operação.");
 		problem.setProperty("code", "INVALID_TERM");
+		return problem;
+	}
+
+	@ExceptionHandler(ReceivableNotFoundException.class)
+	ProblemDetail receivableNotFound(ReceivableNotFoundException exception) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+		problem.setProperty("code", "RECEIVABLE_NOT_FOUND");
+		return problem;
+	}
+
+	@ExceptionHandler(CedenteNotFoundException.class)
+	ProblemDetail cedenteNotFound(CedenteNotFoundException exception) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+		problem.setProperty("code", "CEDENTE_NOT_FOUND");
 		return problem;
 	}
 
