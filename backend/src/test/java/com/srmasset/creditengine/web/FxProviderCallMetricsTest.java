@@ -1,9 +1,9 @@
 package com.srmasset.creditengine.web;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,11 +12,8 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.srmasset.creditengine.domain.fx.ExternalFxServerException;
-
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
-import jakarta.servlet.ServletException;
 
 @SpringBootTest(properties = "credit-engine.fx.provider.failure=SERVER_ERROR")
 @AutoConfigureMockMvc
@@ -30,12 +27,12 @@ class FxProviderCallMetricsTest {
 	private MeterRegistry meters;
 
 	@Test
-	void countsEachRetriedServerErrorAsAProviderCall() {
+	void countsEachRetriedServerErrorAsAProviderCall() throws Exception {
 		double before = serverErrors();
 
-		ServletException failure = assertThrows(ServletException.class,
-				() -> mockMvc.perform(post("/api/v1/fx-rates/refresh")).andReturn());
-		assertInstanceOf(ExternalFxServerException.class, failure.getCause());
+		mockMvc.perform(post("/api/v1/fx-rates/refresh")).andExpect(status().isServiceUnavailable())
+				.andExpect(jsonPath("$.code").value("FX_PROVIDER_UNAVAILABLE"))
+				.andExpect(jsonPath("$.detail").value("Provedor de câmbio indisponível."));
 
 		assertEquals(before + 3, serverErrors());
 	}

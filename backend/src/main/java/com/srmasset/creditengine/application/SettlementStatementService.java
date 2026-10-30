@@ -16,6 +16,8 @@ public class SettlementStatementService {
 
 	private static final int MAX_PAGE_SIZE = 100;
 
+	private static final int MAX_OFFSET = 1_000_000;
+
 	private final SettlementStatementRepository statements;
 
 	public SettlementStatementService(SettlementStatementRepository statements) {
@@ -38,6 +40,9 @@ public class SettlementStatementService {
 		}
 		if (size > MAX_PAGE_SIZE) {
 			throw new StatementQueryException("size não pode ser maior que 100.");
+		}
+		if (page > MAX_OFFSET / size) {
+			throw new StatementQueryException("page é grande demais.");
 		}
 		return statements.find(from, to, cedenteId, currency, page, size);
 	}

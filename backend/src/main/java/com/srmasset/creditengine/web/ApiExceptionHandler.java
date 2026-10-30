@@ -14,9 +14,15 @@ import com.srmasset.creditengine.application.IdempotencyKeyReusedException;
 import com.srmasset.creditengine.application.ReceivableAlreadySettledException;
 import com.srmasset.creditengine.application.ReceivableNotFoundException;
 import com.srmasset.creditengine.application.StatementQueryException;
+import com.srmasset.creditengine.application.StatementQueryTimeoutException;
+import com.srmasset.creditengine.domain.fx.ExternalFxClientException;
+import com.srmasset.creditengine.domain.fx.ExternalFxServerException;
+import com.srmasset.creditengine.domain.fx.ExternalFxTimeoutException;
 import com.srmasset.creditengine.domain.fx.FxRateStaleException;
 import com.srmasset.creditengine.domain.fx.FxRateUnavailableException;
 import com.srmasset.creditengine.domain.pricing.InvalidTermException;
+
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
@@ -94,6 +100,25 @@ public class ApiExceptionHandler {
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT,
 				exception.getMessage());
 		problem.setProperty("code", "FX_RATE_UNAVAILABLE");
+		return problem;
+	}
+
+	@ExceptionHandler({ExternalFxServerException.class, ExternalFxTimeoutException.class,
+			ExternalFxClientException.class, CallNotPermittedException.class})
+	ProblemDetail fxProviderUnavailable(Exception exception) {
+		String detail = exception instanceof CallNotPermittedException
+				? "Provedor de câmbio indisponível."
+				: exception.getMessage();
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, detail);
+		problem.setProperty("code", "FX_PROVIDER_UNAVAILABLE");
+		return problem;
+	}
+
+	@ExceptionHandler(StatementQueryTimeoutException.class)
+	ProblemDetail statementTimeout(StatementQueryTimeoutException exception) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE,
+				exception.getMessage());
+		problem.setProperty("code", "STATEMENT_QUERY_TIMEOUT");
 		return problem;
 	}
 

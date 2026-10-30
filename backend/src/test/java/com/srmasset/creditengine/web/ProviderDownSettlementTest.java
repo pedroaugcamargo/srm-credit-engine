@@ -1,8 +1,6 @@
 package com.srmasset.creditengine.web;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertInstanceOf;
-import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -27,10 +25,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 
-import com.srmasset.creditengine.domain.fx.ExternalFxServerException;
-
-import jakarta.servlet.ServletException;
-
 @SpringBootTest(properties = "credit-engine.fx.provider.failure=SERVER_ERROR")
 @AutoConfigureMockMvc
 @Import(ProviderDownSettlementTest.OperationAfterTheSeedExpired.class)
@@ -49,9 +43,9 @@ class ProviderDownSettlementTest {
 		assertEquals(0, new BigDecimal("5.4321").compareTo(seedRate()));
 		int fxRows = fxCount();
 
-		ServletException refreshFailure = assertThrows(ServletException.class,
-				() -> mockMvc.perform(post("/api/v1/fx-rates/refresh")).andReturn());
-		assertInstanceOf(ExternalFxServerException.class, refreshFailure.getCause());
+		mockMvc.perform(post("/api/v1/fx-rates/refresh")).andExpect(status().isServiceUnavailable())
+				.andExpect(jsonPath("$.code").value("FX_PROVIDER_UNAVAILABLE"))
+				.andExpect(jsonPath("$.detail").value("Provedor de câmbio indisponível."));
 
 		assertEquals(fxRows, fxCount());
 		assertEquals(0, new BigDecimal("5.4321").compareTo(seedRate()));

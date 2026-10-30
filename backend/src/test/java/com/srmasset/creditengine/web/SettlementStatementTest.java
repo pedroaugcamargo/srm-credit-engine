@@ -152,6 +152,14 @@ class SettlementStatementTest {
 				.andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.detail").value("size não pode ser maior que 100."))
 				.andExpect(jsonPath("$.code").value("STATEMENT_QUERY_INVALID"));
+
+		mockMvc.perform(get("/api/v1/settlements").param("from", FROM).param("to", TO).param("page", "50001"))
+				.andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value("page é grande demais."))
+				.andExpect(jsonPath("$.code").value("STATEMENT_QUERY_INVALID"));
+
+		mockMvc.perform(get("/api/v1/settlements").param("from", FROM).param("to", TO).param("page", "2147483647"))
+				.andExpect(status().isBadRequest()).andExpect(jsonPath("$.detail").value("page é grande demais."))
+				.andExpect(jsonPath("$.code").value("STATEMENT_QUERY_INVALID"));
 	}
 
 	private static String netOf(String currency) {
