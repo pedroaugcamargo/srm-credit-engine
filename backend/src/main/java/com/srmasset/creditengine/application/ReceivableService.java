@@ -46,18 +46,13 @@ public class ReceivableService {
 
 	@Transactional(readOnly = true)
 	public Receivable get(UUID id) {
-		return receivables.findById(id).map(ReceivableService::toReceivable).orElseThrow(ReceivableNotFoundException::new);
+		return receivables.findById(id).map(ReceivableService::toReceivable)
+				.orElseThrow(ReceivableNotFoundException::new);
 	}
 
 	private static Receivable toReceivable(ReceivableEntity receivable) {
-		return new Receivable(
-				receivable.getId(),
-				receivable.getCedenteId(),
-				receivable.getType(),
-				receivable.getFaceValue(),
-				receivable.getDueDate(),
-				receivable.getStatus(),
-				receivable.getVersion());
+		return new Receivable(receivable.getId(), receivable.getCedenteId(), receivable.getType(),
+				receivable.getFaceValue(), receivable.getDueDate(), receivable.getStatus(), receivable.getVersion());
 	}
 
 }

@@ -18,9 +18,8 @@ class PricingStrategyRegistryTest {
 
 	@Test
 	void resolvesTheSpreadOfEachReceivableType() {
-		PricingStrategyRegistry registry = new PricingStrategyRegistry(List.of(
-				new DuplicataMercantilStrategy(),
-				new ChequeStrategy()));
+		PricingStrategyRegistry registry = new PricingStrategyRegistry(
+				List.of(new DuplicataMercantilStrategy(), new ChequeStrategy()));
 
 		assertEquals(new BigDecimal("0.015"), registry.monthlySpread(ReceivableType.DUPLICATA_MERCANTIL, context));
 		assertEquals(new BigDecimal("0.025"), registry.monthlySpread(ReceivableType.CHEQUE, context));
@@ -48,11 +47,8 @@ class PricingStrategyRegistryTest {
 			}
 		};
 
-		IllegalStateException error = assertThrows(IllegalStateException.class,
-				() -> new PricingStrategyRegistry(List.of(
-						new DuplicataMercantilStrategy(),
-						extraDuplicata,
-						new ChequeStrategy())));
+		IllegalStateException error = assertThrows(IllegalStateException.class, () -> new PricingStrategyRegistry(
+				List.of(new DuplicataMercantilStrategy(), extraDuplicata, new ChequeStrategy())));
 
 		assertTrue(error.getMessage().contains("DUPLICATA_MERCANTIL"));
 	}

@@ -58,7 +58,8 @@ class ConcurrentSettlementTest {
 		CountDownLatch start = new CountDownLatch(1);
 		try {
 			Future<Outcome> left = pool.submit(() -> settleAfter(ready, start, receivableId, "BRL", UUID.randomUUID()));
-			Future<Outcome> right = pool.submit(() -> settleAfter(ready, start, receivableId, "BRL", UUID.randomUUID()));
+			Future<Outcome> right = pool
+					.submit(() -> settleAfter(ready, start, receivableId, "BRL", UUID.randomUUID()));
 			assertTrue(ready.await(10, TimeUnit.SECONDS));
 			start.countDown();
 			first = left.get(30, TimeUnit.SECONDS);
@@ -100,7 +101,9 @@ class ConcurrentSettlementTest {
 		List<Outcome> outcomes = List.of(first, second);
 		long created = outcomes.stream().filter(outcome -> outcome.status() == 201).count();
 		assertEquals(1, created, first.body() + "\n" + second.body());
-		assertTrue(outcomes.stream().allMatch(outcome -> outcome.status() == 200 || outcome.status() == 201 || outcome.status() == 409),
+		assertTrue(
+				outcomes.stream().allMatch(
+						outcome -> outcome.status() == 200 || outcome.status() == 201 || outcome.status() == 409),
 				first.body() + "\n" + second.body());
 		Outcome winner = outcomes.stream().filter(outcome -> outcome.status() == 201).findFirst().orElseThrow();
 		assertGoldenBrl(winner.body());
@@ -128,8 +131,7 @@ class ConcurrentSettlementTest {
 	}
 
 	private String registerReceivable() throws Exception {
-		String cedenteId = jdbc.queryForObject(
-				"select id::text from cedentes where documento = 'DOC-DEMO-001'",
+		String cedenteId = jdbc.queryForObject("select id::text from cedentes where documento = 'DOC-DEMO-001'",
 				String.class);
 		HttpResponse<String> response = http.send(request("/api/v1/receivables", null, """
 				{
@@ -143,7 +145,8 @@ class ConcurrentSettlementTest {
 		return JsonPath.read(response.body(), "$.id");
 	}
 
-	private Outcome settleAfter(CountDownLatch ready, CountDownLatch start, String receivableId, String currency, UUID key) throws Exception {
+	private Outcome settleAfter(CountDownLatch ready, CountDownLatch start, String receivableId, String currency,
+			UUID key) throws Exception {
 		ready.countDown();
 		assertTrue(start.await(10, TimeUnit.SECONDS));
 		HttpResponse<String> response = http.send(request("/api/v1/settlements", key, """
@@ -152,13 +155,13 @@ class ConcurrentSettlementTest {
 				  "paymentCurrency": "%s"
 				}
 				""".formatted(receivableId, currency)), HttpResponse.BodyHandlers.ofString());
-		return new Outcome(response.statusCode(), response.body(), response.headers().firstValue("Idempotent-Replayed").orElse(null));
+		return new Outcome(response.statusCode(), response.body(),
+				response.headers().firstValue("Idempotent-Replayed").orElse(null));
 	}
 
 	private HttpRequest request(String path, UUID idempotencyKey, String body) {
 		HttpRequest.Builder builder = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
-				.timeout(Duration.ofSeconds(20))
-				.header("Content-Type", "application/json")
+				.timeout(Duration.ofSeconds(20)).header("Content-Type", "application/json")
 				.POST(HttpRequest.BodyPublishers.ofString(body));
 		if (idempotencyKey != null) {
 			builder.header("Idempotency-Key", idempotencyKey.toString());
@@ -167,24 +170,17 @@ class ConcurrentSettlementTest {
 	}
 
 	private int settlementsOf(String receivableId) {
-		return jdbc.queryForObject(
-				"select count(*) from settlements where receivable_id = ?::uuid",
-				Integer.class,
+		return jdbc.queryForObject("select count(*) from settlements where receivable_id = ?::uuid", Integer.class,
 				receivableId);
 	}
 
 	private int settlementsOfKey(UUID key) {
-		return jdbc.queryForObject(
-				"select count(*) from settlements where idempotency_key = ?::uuid",
-				Integer.class,
+		return jdbc.queryForObject("select count(*) from settlements where idempotency_key = ?::uuid", Integer.class,
 				key);
 	}
 
 	private String receivableStatus(String receivableId) {
-		return jdbc.queryForObject(
-				"select status from receivables where id = ?::uuid",
-				String.class,
-				receivableId);
+		return jdbc.queryForObject("select status from receivables where id = ?::uuid", String.class, receivableId);
 	}
 
 	private record Outcome(int status, String body, String replayed) {

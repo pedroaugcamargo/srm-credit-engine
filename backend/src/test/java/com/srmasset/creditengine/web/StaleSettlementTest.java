@@ -38,37 +38,29 @@ class StaleSettlementTest {
 
 	@Test
 	void rejectsUsdSettlementWhenTheRateIsOlderThan24Hours() throws Exception {
-		String cedenteId = jdbc.queryForObject(
-				"select id::text from cedentes where documento = 'DOC-DEMO-001'",
+		String cedenteId = jdbc.queryForObject("select id::text from cedentes where documento = 'DOC-DEMO-001'",
 				String.class);
-		MvcResult created = mockMvc.perform(post("/api/v1/receivables")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("""
+		MvcResult created = mockMvc
+				.perform(post("/api/v1/receivables").contentType(MediaType.APPLICATION_JSON).content("""
 						{
 						  "cedenteId": "%s",
 						  "type": "DUPLICATA_MERCANTIL",
 						  "faceValue": "100000.00",
 						  "dueDate": "2026-04-03"
 						}
-						""".formatted(cedenteId)))
-				.andExpect(status().isCreated())
-				.andReturn();
+						""".formatted(cedenteId))).andExpect(status().isCreated()).andReturn();
 		String receivableId = com.jayway.jsonpath.JsonPath.read(created.getResponse().getContentAsString(), "$.id");
 
-		mockMvc.perform(post("/api/v1/settlements")
-				.header("Idempotency-Key", UUID.randomUUID())
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("""
+		mockMvc.perform(post("/api/v1/settlements").header("Idempotency-Key", UUID.randomUUID())
+				.contentType(MediaType.APPLICATION_JSON).content("""
 						{
 						  "receivableId": "%s",
 						  "paymentCurrency": "USD"
 						}
-						""".formatted(receivableId)))
-				.andExpect(status().isUnprocessableContent())
+						""".formatted(receivableId))).andExpect(status().isUnprocessableContent())
 				.andExpect(jsonPath("$.code").value("FX_RATE_STALE"));
 
-		mockMvc.perform(get("/api/v1/receivables/" + receivableId))
-				.andExpect(jsonPath("$.status").value("OPEN"));
+		mockMvc.perform(get("/api/v1/receivables/" + receivableId)).andExpect(jsonPath("$.status").value("OPEN"));
 	}
 
 	@TestConfiguration

@@ -32,62 +32,50 @@ class PricingSimulationControllerTest {
 
 	@Test
 	void simulatesCaseC1() throws Exception {
-		mockMvc.perform(post("/api/v1/pricing/simulations")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("""
-						{
-						  "faceValue": "100000.00",
-						  "receivableType": "DUPLICATA_MERCANTIL",
-						  "dueDate": "2027-01-24",
-						  "paymentCurrency": "BRL"
-						}
-						"""))
-				.andExpect(status().isOk())
-				.andExpect(content().json("""
-						{
-						  "faceValue": "100000.00",
-						  "termMonths": "3",
-						  "baseRate": "0.01",
-						  "spread": "0.015",
-						  "presentValueBrl": "92859.94",
-						  "discountBrl": "7140.06",
-						  "paymentCurrency": "BRL",
-						  "fxRate": null,
-						  "netAmount": "92859.94"
-						}
-						"""));
+		mockMvc.perform(post("/api/v1/pricing/simulations").contentType(MediaType.APPLICATION_JSON).content("""
+				{
+				  "faceValue": "100000.00",
+				  "receivableType": "DUPLICATA_MERCANTIL",
+				  "dueDate": "2027-01-24",
+				  "paymentCurrency": "BRL"
+				}
+				""")).andExpect(status().isOk()).andExpect(content().json("""
+				{
+				  "faceValue": "100000.00",
+				  "termMonths": "3",
+				  "baseRate": "0.01",
+				  "spread": "0.015",
+				  "presentValueBrl": "92859.94",
+				  "discountBrl": "7140.06",
+				  "paymentCurrency": "BRL",
+				  "fxRate": null,
+				  "netAmount": "92859.94"
+				}
+				"""));
 	}
 
 	@Test
 	void rejectsNonPositiveFaceValue() throws Exception {
-		mockMvc.perform(post("/api/v1/pricing/simulations")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("""
-						{
-						  "faceValue": "0.00",
-						  "receivableType": "DUPLICATA_MERCANTIL",
-						  "dueDate": "2027-01-24",
-						  "paymentCurrency": "BRL"
-						}
-						"""))
-				.andExpect(status().isBadRequest())
-				.andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+		mockMvc.perform(post("/api/v1/pricing/simulations").contentType(MediaType.APPLICATION_JSON).content("""
+				{
+				  "faceValue": "0.00",
+				  "receivableType": "DUPLICATA_MERCANTIL",
+				  "dueDate": "2027-01-24",
+				  "paymentCurrency": "BRL"
+				}
+				""")).andExpect(status().isBadRequest()).andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 	}
 
 	@Test
 	void rejectsDueDateOnTheOperationDate() throws Exception {
-		mockMvc.perform(post("/api/v1/pricing/simulations")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("""
-						{
-						  "faceValue": "100000.00",
-						  "receivableType": "DUPLICATA_MERCANTIL",
-						  "dueDate": "2026-10-26",
-						  "paymentCurrency": "BRL"
-						}
-						"""))
-				.andExpect(status().isUnprocessableContent())
-				.andExpect(jsonPath("$.code").value("INVALID_TERM"));
+		mockMvc.perform(post("/api/v1/pricing/simulations").contentType(MediaType.APPLICATION_JSON).content("""
+				{
+				  "faceValue": "100000.00",
+				  "receivableType": "DUPLICATA_MERCANTIL",
+				  "dueDate": "2026-10-26",
+				  "paymentCurrency": "BRL"
+				}
+				""")).andExpect(status().isUnprocessableContent()).andExpect(jsonPath("$.code").value("INVALID_TERM"));
 	}
 
 	@TestConfiguration

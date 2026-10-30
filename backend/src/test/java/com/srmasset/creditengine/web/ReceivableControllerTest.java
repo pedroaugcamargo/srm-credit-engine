@@ -36,25 +36,20 @@ class ReceivableControllerTest {
 	void registersAnOpenReceivableAndReturnsIt() throws Exception {
 		String cedenteId = cedenteId("DOC-DEMO-001");
 
-		MvcResult created = mockMvc.perform(post("/api/v1/receivables")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("""
+		MvcResult created = mockMvc
+				.perform(post("/api/v1/receivables").contentType(MediaType.APPLICATION_JSON).content("""
 						{
 						  "cedenteId": "%s",
 						  "type": "DUPLICATA_MERCANTIL",
 						  "faceValue": "100000.00",
 						  "dueDate": "2027-01-24"
 						}
-						""".formatted(cedenteId)))
-				.andExpect(status().isCreated())
-				.andExpect(header().exists(HttpHeaders.LOCATION))
-				.andExpect(jsonPath("$.cedenteId").value(cedenteId))
+						""".formatted(cedenteId))).andExpect(status().isCreated())
+				.andExpect(header().exists(HttpHeaders.LOCATION)).andExpect(jsonPath("$.cedenteId").value(cedenteId))
 				.andExpect(jsonPath("$.type").value("DUPLICATA_MERCANTIL"))
 				.andExpect(jsonPath("$.faceValue").value("100000.00"))
-				.andExpect(jsonPath("$.dueDate").value("2027-01-24"))
-				.andExpect(jsonPath("$.status").value("OPEN"))
-				.andExpect(jsonPath("$.version").value(0))
-				.andReturn();
+				.andExpect(jsonPath("$.dueDate").value("2027-01-24")).andExpect(jsonPath("$.status").value("OPEN"))
+				.andExpect(jsonPath("$.version").value(0)).andReturn();
 
 		String id = com.jayway.jsonpath.JsonPath.read(created.getResponse().getContentAsString(), "$.id");
 		assertNotNull(id);
@@ -62,14 +57,11 @@ class ReceivableControllerTest {
 		assertNotNull(location);
 		assertTrue(location.endsWith("/api/v1/receivables/" + id));
 
-		mockMvc.perform(get("/api/v1/receivables/" + id))
-				.andExpect(status().isOk())
-				.andExpect(jsonPath("$.id").value(id))
-				.andExpect(jsonPath("$.cedenteId").value(cedenteId))
+		mockMvc.perform(get("/api/v1/receivables/" + id)).andExpect(status().isOk())
+				.andExpect(jsonPath("$.id").value(id)).andExpect(jsonPath("$.cedenteId").value(cedenteId))
 				.andExpect(jsonPath("$.type").value("DUPLICATA_MERCANTIL"))
 				.andExpect(jsonPath("$.faceValue").value("100000.00"))
-				.andExpect(jsonPath("$.dueDate").value("2027-01-24"))
-				.andExpect(jsonPath("$.status").value("OPEN"))
+				.andExpect(jsonPath("$.dueDate").value("2027-01-24")).andExpect(jsonPath("$.status").value("OPEN"))
 				.andExpect(jsonPath("$.version").value(0));
 	}
 
@@ -77,48 +69,38 @@ class ReceivableControllerTest {
 	void rejectsAFaceValueThatIsNotPositive() throws Exception {
 		String cedenteId = cedenteId("DOC-DEMO-001");
 
-		mockMvc.perform(post("/api/v1/receivables")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("""
-						{
-						  "cedenteId": "%s",
-						  "type": "DUPLICATA_MERCANTIL",
-						  "faceValue": "0.00",
-						  "dueDate": "2027-01-24"
-						}
-						""".formatted(cedenteId)))
-				.andExpect(status().isBadRequest())
+		mockMvc.perform(post("/api/v1/receivables").contentType(MediaType.APPLICATION_JSON).content("""
+				{
+				  "cedenteId": "%s",
+				  "type": "DUPLICATA_MERCANTIL",
+				  "faceValue": "0.00",
+				  "dueDate": "2027-01-24"
+				}
+				""".formatted(cedenteId))).andExpect(status().isBadRequest())
 				.andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
 	}
 
 	@Test
 	void rejectsAnUnknownCedente() throws Exception {
-		mockMvc.perform(post("/api/v1/receivables")
-				.contentType(MediaType.APPLICATION_JSON)
-				.content("""
-						{
-						  "cedenteId": "%s",
-						  "type": "CHEQUE",
-						  "faceValue": "100000.00",
-						  "dueDate": "2027-01-24"
-						}
-						""".formatted(UUID.randomUUID())))
-				.andExpect(status().isNotFound())
+		mockMvc.perform(post("/api/v1/receivables").contentType(MediaType.APPLICATION_JSON).content("""
+				{
+				  "cedenteId": "%s",
+				  "type": "CHEQUE",
+				  "faceValue": "100000.00",
+				  "dueDate": "2027-01-24"
+				}
+				""".formatted(UUID.randomUUID()))).andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.code").value("CEDENTE_NOT_FOUND"));
 	}
 
 	@Test
 	void returnsNotFoundForAnUnknownReceivable() throws Exception {
-		mockMvc.perform(get("/api/v1/receivables/" + UUID.randomUUID()))
-				.andExpect(status().isNotFound())
+		mockMvc.perform(get("/api/v1/receivables/" + UUID.randomUUID())).andExpect(status().isNotFound())
 				.andExpect(jsonPath("$.code").value("RECEIVABLE_NOT_FOUND"));
 	}
 
 	private String cedenteId(String documento) {
-		return jdbc.queryForObject(
-				"select id::text from cedentes where documento = ?",
-				String.class,
-				documento);
+		return jdbc.queryForObject("select id::text from cedentes where documento = ?", String.class, documento);
 	}
 
 }

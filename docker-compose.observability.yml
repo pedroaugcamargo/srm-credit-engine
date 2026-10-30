@@ -1,0 +1,70 @@
+name: credit-engine-observability
+
+services:
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.retention.time=7d
+      - --storage.tsdb.retention.size=2GB
+    volumes:
+      - ./observability/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus-data:/prometheus
+    mem_limit: 512m
+    networks:
+      - credit_engine
+
+  loki:
+    image: grafana/loki:3.4.2
+    command:
+      - -config.file=/etc/loki/loki-config.yaml
+    volumes:
+      - ./observability/loki-config.yaml:/etc/loki/loki-config.yaml:ro
+      - loki-data:/loki
+    mem_limit: 320m
+    networks:
+      - credit_engine
+
+  alloy:
+    image: grafana/alloy:v1.7.5
+    command:
+      - run
+      - --server.http.listen-addr=0.0.0.0:12345
+      - --storage.path=/var/lib/alloy/data
+      - /etc/alloy/config.alloy
+    volumes:
+      - ./observability/config.alloy:/etc/alloy/config.alloy:ro
+      - alloy-data:/var/lib/alloy/data
+      - /var/run/docker.sock:/var/run/docker.sock
+    mem_limit: 160m
+    depends_on:
+      - loki
+    networks:
+      - credit_engine
+
+  grafana:
+    image: grafana/grafana:11.5.2
+    environment:
+      GF_USERS_ALLOW_SIGN_UP: "false"
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Admin
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./observability/grafana/provisioning:/etc/grafana/provisioning:ro
+    mem_limit: 256m
+    depends_on:
+      - prometheus
+      - loki
+    networks:
+      - credit_engine
+
+networks:
+  credit_engine:
+    external: true
+    name: credit_engine
+
+volumes:
+  prometheus-data:
+  loki-data:
+  alloy-data:

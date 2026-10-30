@@ -49,10 +49,10 @@ Cobrir: motor stateless escalado horizontalmente; câmbio e taxa base em cache l
 Fluxo de eventos da liquidação (`SettlementRequested`, `SettlementCompleted`, `PaymentInstructed`, `PaymentConfirmed`, `SettlementReversed`), outbox, saga com compensação por estorno e o que muda para o operador.
 
 ### 6. `docs/architecture.md`
-C4 nível 1 (operador, SRM Credit Engine, provedor de câmbio, sistema de pagamentos) e nível 2 (SPA, API Spring, PostgreSQL, Prometheus) em Mermaid.
+C4 nível 1 (operador, SRM Credit Engine, provedor de câmbio, sistema de pagamentos) e nível 2 (SPA, API Spring, PostgreSQL, Prometheus, Grafana, Loki) em Mermaid.
 
 ### 7. `DECISIONS.md`
-O que foi cortado e por quê: autenticação, Grafana, estorno, cadastro de recebível sem idempotência própria (não movimenta dinheiro), dias úteis e feriados, título em USD. Cada corte com o risco aceito.
+O que foi cortado e por quê: autenticação, alertas, estorno, cadastro de recebível sem idempotência própria (não movimenta dinheiro), dias úteis e feriados, título em USD. Cada corte com o risco aceito. Grafana entra na entrega 003 e não é corte.
 
 ### 8. `AI_USAGE.md`
 - Os specs da pasta `docs/sdd/` como evidência do plano dado à IA.

@@ -3,15 +3,8 @@ package com.srmasset.creditengine.domain.pricing;
 import java.math.BigDecimal;
 import java.util.Objects;
 
-public record PricingResult(
-		BigDecimal faceValue,
-		BigDecimal termMonths,
-		BigDecimal baseRate,
-		BigDecimal spread,
-		BigDecimal presentValueBrl,
-		BigDecimal discountBrl,
-		PaymentCurrency paymentCurrency,
-		BigDecimal fxRate,
+public record PricingResult(BigDecimal faceValue, BigDecimal termMonths, BigDecimal baseRate, BigDecimal spread,
+		BigDecimal presentValueBrl, BigDecimal discountBrl, PaymentCurrency paymentCurrency, BigDecimal fxRate,
 		BigDecimal netAmount) {
 
 	public PricingResult {

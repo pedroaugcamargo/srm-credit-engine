@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.srmasset.creditengine.application.FxRateRefreshService;
 import com.srmasset.creditengine.application.FxRateService;
 
 import jakarta.validation.Valid;
@@ -18,15 +19,24 @@ import jakarta.validation.Valid;
 public class FxRateController {
 
 	private final FxRateService rates;
+	private final FxRateRefreshService refresh;
 
-	public FxRateController(FxRateService rates) {
+	public FxRateController(FxRateService rates, FxRateRefreshService refresh) {
 		this.rates = rates;
+		this.refresh = refresh;
 	}
 
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
 	public RegisteredFxRateResponse register(@Valid @RequestBody FxRateRequest request) {
-		return RegisteredFxRateResponse.from(rates.register(request.base(), request.quote(), request.rate(), request.validFrom()));
+		return RegisteredFxRateResponse
+				.from(rates.register(request.base(), request.quote(), request.rate(), request.validFrom()));
+	}
+
+	@PostMapping("/refresh")
+	@ResponseStatus(HttpStatus.CREATED)
+	public RegisteredFxRateResponse refresh() {
+		return RegisteredFxRateResponse.from(refresh.refresh());
 	}
 
 	@GetMapping("/current")
