@@ -79,8 +79,10 @@ export interface SettlementResponse {
 }
 
 export interface StatementQuery {
-  from: IsoDate
-  to: IsoDate
+  /** Início do período, inclusive. */
+  from: IsoDateTime
+  /** Fim do período, inclusive. */
+  to: IsoDateTime
   cedenteId?: string
   currency?: PaymentCurrency
   page?: number

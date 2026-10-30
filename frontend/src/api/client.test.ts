@@ -101,8 +101,8 @@ describe('api client', () => {
     mockFetch(new TypeError('Failed to fetch'))
 
     const error = await fetchStatement({
-      from: '2026-10-01',
-      to: '2026-10-31',
+      from: '2026-10-01T00:00:00-03:00',
+      to: '2026-10-31T23:59:59.999999-03:00',
     }).catch((e: unknown) => e)
 
     expect(error).toBeInstanceOf(ApiError)
@@ -115,15 +115,15 @@ describe('api client', () => {
     )
 
     await fetchStatement({
-      from: '2026-10-01',
-      to: '2026-10-31',
+      from: '2026-10-01T00:00:00-03:00',
+      to: '2026-10-31T23:59:59.999999-03:00',
       currency: 'USD',
       page: 0,
       size: 20,
     })
 
     expect(fetchMock.mock.calls[0][0]).toBe(
-      '/api/v1/settlements?from=2026-10-01&to=2026-10-31&currency=USD&page=0&size=20',
+      '/api/v1/settlements?from=2026-10-01T00%3A00%3A00-03%3A00&to=2026-10-31T23%3A59%3A59.999999-03%3A00&currency=USD&page=0&size=20',
     )
   })
 })
