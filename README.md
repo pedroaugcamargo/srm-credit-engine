@@ -16,7 +16,7 @@ Plataforma de cessão de crédito multimoedas (BRL/USD): precificação de receb
 docker compose up --build
 ```
 
-Sobe o Postgres e o backend.
+Ao rodar o comando acima, sobe o postgres e o backend.
 
 | O quê | Endereço |
 |---|---|
@@ -61,7 +61,7 @@ O critério do SPEC é p95 abaixo de 500 ms. O teste `SettlementStatementLoadTes
 
 ## Fluxo de Git
 
-GitHub Flow: a `main` está sempre estável e cada entrega nasce numa branch curta, entrando por Pull Request com descrição do porquê. Hooks versionados em `.githooks` bloqueiam commit e push direto na `main` e validam Conventional Commits. Para ativar após clonar:
+GitHub Flow: a `main` está sempre estável e cada entrega nasce numa branch curta, entrando por Pull Request. Hooks versionados em `.githooks` bloqueiam commit e push direto na `main` e validam Conventional Commits. Para ativar após clonar:
 
 ```bash
 git config core.hooksPath .githooks

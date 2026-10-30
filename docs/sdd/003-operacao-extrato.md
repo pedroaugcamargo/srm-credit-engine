@@ -84,10 +84,10 @@ Erros: `400` para período ausente, invertido ou maior que 366 dias.
 
 ## Definition of done
 
-- [ ] Derrubar o mock do provedor não quebra nenhuma liquidação em BRL e gera 422 claro em USD quando a taxa fica velha.
-- [ ] `/actuator/prometheus` mostra as métricas de negócio após uma liquidação.
-- [ ] Com a aplicação já na rede `credit_engine` e a stack de observabilidade no ar, a mesma liquidação aparece no dashboard `credit-engine-operacao`, e o log dela é achável no Grafana pelo `correlationId`.
-- [ ] Extrato sem ORM, sem query concatenada, respondendo dentro do critério do SPEC com 100 mil linhas (medição manual registrada no README).
+- [x] Derrubar o mock do provedor não quebra nenhuma liquidação em BRL e gera 422 claro em USD quando a taxa fica velha.
+- [x] `/actuator/prometheus` mostra as métricas de negócio após uma liquidação.
+- [x] Com a aplicação já na rede `credit_engine` e a stack de observabilidade no ar, a mesma liquidação aparece no dashboard `credit-engine-operacao`, e o log dela é achável no Grafana pelo `correlationId`.
+- [x] Extrato sem ORM, sem query concatenada, respondendo dentro do critério do SPEC com 100 mil linhas (medição manual registrada no README).
 
 ## Instruções para o agente de IA
 
