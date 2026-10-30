@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -12,6 +13,7 @@ import com.srmasset.creditengine.application.IdempotencyKeyRequiredException;
 import com.srmasset.creditengine.application.IdempotencyKeyReusedException;
 import com.srmasset.creditengine.application.ReceivableAlreadySettledException;
 import com.srmasset.creditengine.application.ReceivableNotFoundException;
+import com.srmasset.creditengine.application.StatementQueryException;
 import com.srmasset.creditengine.domain.fx.FxRateStaleException;
 import com.srmasset.creditengine.domain.fx.FxRateUnavailableException;
 import com.srmasset.creditengine.domain.pricing.InvalidTermException;
@@ -55,6 +57,23 @@ public class ApiExceptionHandler {
 				HttpStatus.UNPROCESSABLE_CONTENT,
 				exception.getMessage());
 		problem.setProperty("code", "IDEMPOTENCY_KEY_REUSED");
+		return problem;
+	}
+
+	@ExceptionHandler(StatementQueryException.class)
+	ProblemDetail statementQuery(StatementQueryException exception) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+		problem.setProperty("code", "STATEMENT_QUERY_INVALID");
+		return problem;
+	}
+
+	@ExceptionHandler(MissingServletRequestParameterException.class)
+	ProblemDetail missingParameter(MissingServletRequestParameterException exception) {
+		boolean period = "from".equals(exception.getParameterName()) || "to".equals(exception.getParameterName());
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(
+				HttpStatus.BAD_REQUEST,
+				period ? "Informe o período." : "A requisição contém dados inválidos.");
+		problem.setProperty("code", period ? "STATEMENT_QUERY_INVALID" : "VALIDATION_ERROR");
 		return problem;
 	}
 
