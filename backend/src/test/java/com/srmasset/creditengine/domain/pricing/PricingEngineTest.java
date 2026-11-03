@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.Clock;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -21,8 +22,8 @@ class PricingEngineTest {
 
 	private final PricingEngine engine = new PricingEngine(
 			new PricingStrategyRegistry(List.of(new DuplicataMercantilStrategy(), new ChequeStrategy())),
-			new RoundingPolicy(2, RoundingMode.HALF_EVEN), new BigDecimal("0.01"), () -> new BigDecimal("5.4321"),
-			new SimpleMeterRegistry());
+			new RoundingPolicy(2, RoundingMode.HALF_EVEN), at -> new BigDecimal("0.01"), () -> new BigDecimal("5.4321"),
+			Clock.systemUTC(), new SimpleMeterRegistry());
 
 	@ParameterizedTest(name = "{0}")
 	@MethodSource("goldenCases")

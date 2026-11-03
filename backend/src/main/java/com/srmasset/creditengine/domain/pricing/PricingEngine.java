@@ -2,9 +2,9 @@ package com.srmasset.creditengine.domain.pricing;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
+import java.time.Clock;
 import java.util.Objects;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import ch.obermuhlner.math.big.BigDecimalMath;
@@ -18,23 +18,26 @@ public final class PricingEngine {
 
 	private final PricingStrategyRegistry strategies;
 	private final RoundingPolicy roundingPolicy;
-	private final BigDecimal baseRate;
+	private final BaseRateProvider baseRateProvider;
 	private final FxRateProvider fxRateProvider;
+	private final Clock clock;
 	private final Timer pricingDuration;
 
 	public PricingEngine(PricingStrategyRegistry strategies, RoundingPolicy roundingPolicy,
-			@Value("${credit-engine.pricing.base-rate}") BigDecimal baseRate, FxRateProvider fxRateProvider,
+			BaseRateProvider baseRateProvider, FxRateProvider fxRateProvider, Clock clock,
 			MeterRegistry meterRegistry) {
 		this.strategies = Objects.requireNonNull(strategies, "strategies");
 		this.roundingPolicy = Objects.requireNonNull(roundingPolicy, "roundingPolicy");
-		this.baseRate = Objects.requireNonNull(baseRate, "baseRate");
+		this.baseRateProvider = Objects.requireNonNull(baseRateProvider, "baseRateProvider");
 		this.fxRateProvider = Objects.requireNonNull(fxRateProvider, "fxRateProvider");
+		this.clock = Objects.requireNonNull(clock, "clock");
 		this.pricingDuration = Timer.builder("pricing_engine_duration").publishPercentiles(0.95)
 				.register(meterRegistry);
 	}
 
 	public PricingResult price(PricingInput input) {
 		Objects.requireNonNull(input, "input");
+		BigDecimal baseRate = baseRateProvider.rateAt(clock.instant());
 		BigDecimal fxRate = input.paymentCurrency() == PaymentCurrency.USD ? fxRateProvider.brlPerUsd() : null;
 		return price(input, baseRate, fxRate);
 	}
