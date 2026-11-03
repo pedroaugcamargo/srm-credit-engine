@@ -13,6 +13,7 @@ import com.srmasset.creditengine.application.IdempotencyKeyRequiredException;
 import com.srmasset.creditengine.application.IdempotencyKeyReusedException;
 import com.srmasset.creditengine.application.ReceivableAlreadySettledException;
 import com.srmasset.creditengine.application.ReceivableNotFoundException;
+import com.srmasset.creditengine.application.SettlementNotFoundException;
 import com.srmasset.creditengine.application.StatementQueryException;
 import com.srmasset.creditengine.application.StatementQueryTimeoutException;
 import com.srmasset.creditengine.domain.fx.ExternalFxClientException;
@@ -39,6 +40,13 @@ public class ApiExceptionHandler {
 	ProblemDetail receivableNotFound(ReceivableNotFoundException exception) {
 		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
 		problem.setProperty("code", "RECEIVABLE_NOT_FOUND");
+		return problem;
+	}
+
+	@ExceptionHandler(SettlementNotFoundException.class)
+	ProblemDetail settlementNotFound(SettlementNotFoundException exception) {
+		ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+		problem.setProperty("code", "SETTLEMENT_NOT_FOUND");
 		return problem;
 	}
 

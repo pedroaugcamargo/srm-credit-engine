@@ -66,6 +66,26 @@ class SettlementControllerTest {
 	}
 
 	@Test
+	void returnsTheSettlementAtItsLocation() throws Exception {
+		String receivableId = registerReceivable(DUE_DATE);
+		MvcResult created = settle(receivableId, "USD", UUID.randomUUID()).andExpect(status().isCreated()).andReturn();
+		String id = com.jayway.jsonpath.JsonPath.read(created.getResponse().getContentAsString(), "$.id");
+		String location = created.getResponse().getHeader(HttpHeaders.LOCATION);
+
+		mockMvc.perform(get(java.net.URI.create(location))).andExpect(status().isOk())
+				.andExpect(jsonPath("$.id").value(id)).andExpect(jsonPath("$.receivableId").value(receivableId))
+				.andExpect(jsonPath("$.presentValueBrl").value("92859.94"))
+				.andExpect(jsonPath("$.fxRate").value("5.4321")).andExpect(jsonPath("$.netAmount").value("17094.67"))
+				.andExpect(jsonPath("$.settledAt").value("2026-01-01T12:00:00-03:00"));
+	}
+
+	@Test
+	void rejectsAnUnknownSettlement() throws Exception {
+		mockMvc.perform(get("/api/v1/settlements/" + UUID.randomUUID())).andExpect(status().isNotFound())
+				.andExpect(jsonPath("$.code").value("SETTLEMENT_NOT_FOUND"));
+	}
+
+	@Test
 	void settlesDuplicataInBrlWithoutFx() throws Exception {
 		String receivableId = registerReceivable(DUE_DATE);
 

@@ -103,6 +103,11 @@ public class SettlementService {
 		}
 	}
 
+	public SettlementSnapshot get(UUID id) {
+		return settlements.findById(id).map(SettlementService::toSnapshot)
+				.orElseThrow(SettlementNotFoundException::new);
+	}
+
 	private SettlementSnapshot create(UUID idempotencyKey, UUID receivableId, PaymentCurrency paymentCurrency,
 			String hash) {
 		ReceivableEntity receivable = receivables.findById(receivableId).orElseThrow(() -> {
