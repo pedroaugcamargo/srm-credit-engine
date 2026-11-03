@@ -6,6 +6,7 @@ import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -40,6 +41,11 @@ public class SettlementController {
 			@RequestParam(required = false) UUID cedenteId, @RequestParam(required = false) PaymentCurrency currency,
 			@RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "20") int size) {
 		return StatementResponse.from(statement.statement(from, to, cedenteId, currency, page, size));
+	}
+
+	@GetMapping("/{id}")
+	public SettlementResponse get(@PathVariable UUID id) {
+		return SettlementResponse.from(settlements.get(id));
 	}
 
 	@PostMapping

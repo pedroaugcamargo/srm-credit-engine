@@ -49,9 +49,9 @@ class PricingEngineTest {
 				Arguments.of("C1", input("100000.00", ReceivableType.DUPLICATA_MERCANTIL, "3", PaymentCurrency.BRL),
 						result("100000.00", "3", "0.01", "0.015", "92859.94", "7140.06", PaymentCurrency.BRL, null,
 								"92859.94")),
-				Arguments.of("C2", input("100000.00", ReceivableType.CHEQUE, "3", PaymentCurrency.BRL),
-						result("100000.00", "3", "0.01", "0.025", "90194.27", "9805.73", PaymentCurrency.BRL, null,
-								"90194.27")),
+				Arguments.of("C2", input("25000.00", ReceivableType.CHEQUE, "2", PaymentCurrency.BRL),
+						result("25000.00", "2", "0.01", "0.025", "23337.77", "1662.23", PaymentCurrency.BRL, null,
+								"23337.77")),
 				Arguments.of("C3", input("100000.00", ReceivableType.DUPLICATA_MERCANTIL, "3", PaymentCurrency.USD),
 						result("100000.00", "3", "0.01", "0.015", "92859.94", "7140.06", PaymentCurrency.USD, "5.4321",
 								"17094.67")));
