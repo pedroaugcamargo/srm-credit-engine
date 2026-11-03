@@ -9,9 +9,10 @@ import java.util.Comparator;
 import org.springframework.stereotype.Component;
 
 import com.srmasset.creditengine.application.BaseRateUnavailableException;
+import com.srmasset.creditengine.domain.pricing.BaseRateProvider;
 
 @Component
-public final class DbBaseRateProvider {
+public final class DbBaseRateProvider implements BaseRateProvider {
 
 	private final BaseRateRepository rates;
 
@@ -19,6 +20,7 @@ public final class DbBaseRateProvider {
 		this.rates = rates;
 	}
 
+	@Override
 	public BigDecimal rateAt(Instant at) {
 		OffsetDateTime limit = OffsetDateTime.ofInstant(at, ZoneOffset.UTC);
 		return rates.findByValidFromLessThanEqual(limit).stream()

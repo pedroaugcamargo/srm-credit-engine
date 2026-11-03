@@ -9,14 +9,18 @@ public record SimulationResponse(String faceValue, String termMonths, String bas
 		String presentValueBrl, String discountBrl, PaymentCurrency paymentCurrency, String fxRate, String netAmount) {
 
 	static SimulationResponse from(PricingResult result) {
-		return new SimulationResponse(plain(result.faceValue()), plain(result.termMonths()), plain(result.baseRate()),
-				plain(result.spread()), plain(result.presentValueBrl()), plain(result.discountBrl()),
+		return new SimulationResponse(money(result.faceValue()), plain(result.termMonths()), plain(result.baseRate()),
+				plain(result.spread()), money(result.presentValueBrl()), money(result.discountBrl()),
 				result.paymentCurrency(), result.fxRate() == null ? null : plain(result.fxRate()),
-				plain(result.netAmount()));
+				money(result.netAmount()));
+	}
+
+	private static String money(BigDecimal value) {
+		return value.toPlainString();
 	}
 
 	private static String plain(BigDecimal value) {
-		return value.toPlainString();
+		return value.stripTrailingZeros().toPlainString();
 	}
 
 }
